@@ -2,8 +2,8 @@ CXX = c++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 CPPFLAGS = -Isluggish/compiler
 
-SOURCES = sluggish/compiler/main.cpp sluggish/compiler/lex/Lexer.cpp sluggish/compiler/stage-emit/Emit.cpp
-HEADERS = sluggish/compiler/lex/Lexer.hpp sluggish/compiler/lex/Token.hpp sluggish/compiler/stage-emit/Emit.hpp
+SOURCES = sluggish/compiler/main.cpp sluggish/compiler/lex/Lexer.cpp sluggish/compiler/parse/Parser.cpp sluggish/compiler/stage-emit/Emit.cpp
+HEADERS = sluggish/compiler/lex/Lexer.hpp sluggish/compiler/lex/Token.hpp sluggish/compiler/parse/Parser.hpp sluggish/compiler/stage-emit/Emit.hpp
 
 .PHONY: run
 

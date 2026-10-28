@@ -30,6 +30,7 @@ struct Assignment : public Statement {
 };
 
 // Parses the entire token sequence; throws std::runtime_error on invalid syntax.
+// Writes one statement per line to intermediate/parse.txt through emit().
 std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens);
 
 } // namespace sluggish

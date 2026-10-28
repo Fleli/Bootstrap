@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "stage-emit/Emit.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -76,6 +77,30 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
         }
     }
     
+    std::string output;
+
+    for (const auto& statement : statements) {
+
+        if (const auto* declaration = dynamic_cast<const Declaration*>(statement.get())) {
+
+            output += "Declaration     " + declaration->type_name + " " + declaration->name;
+
+            if (!declaration->initializer.empty()) {
+                output += " = " + declaration->initializer;
+            }
+
+        } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement.get())) {
+
+            output += "Assignment      " + assignment->name + " = " + assignment->value;
+
+        }
+
+        output += "\n";
+
+    }
+
+    emit("parse.txt", output);
+
     return statements;
     
 }

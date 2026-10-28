@@ -1,4 +1,5 @@
 #include "lex/Lexer.hpp"
+#include "parse/Parser.hpp"
 
 #include <exception>
 #include <iostream>
@@ -10,7 +11,8 @@ int main() {
     source << std::cin.rdbuf();
 
     try {
-        sluggish::lex(source.str());
+        const auto tokens = sluggish::lex(source.str());
+        sluggish::parse(tokens);
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;
