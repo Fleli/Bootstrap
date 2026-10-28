@@ -5,13 +5,9 @@
 namespace sluggish {
 
 enum class TokenType {
-    String,
     Number,
     Symbol,
-    Init,
-    Private,
-    Self,
-    Assign,
+    EqualSign,
     Semicolon,
 };
 
