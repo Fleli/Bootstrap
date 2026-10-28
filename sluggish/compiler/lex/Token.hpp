@@ -11,6 +11,8 @@ enum class TokenType {
     Init,
     Private,
     Self,
+    Assign,
+    Semicolon,
 };
 
 struct SourceReference {};

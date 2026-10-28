@@ -1,0 +1,5 @@
+
+word_t testName;
+testName = 5;
+
+
