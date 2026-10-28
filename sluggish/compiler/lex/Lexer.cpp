@@ -1,4 +1,5 @@
 #include "Lexer.hpp"
+#include "stage-emit/Emit.hpp"
 
 #include <stdexcept>
 
@@ -46,6 +47,24 @@ std::vector<Token> lex(std::string_view source) {
         const auto body = source.substr(start, i - start);
         tokens.push_back({type, std::string(body)});
     }
+
+    std::string output;
+
+    for (const auto& token : tokens) {
+
+        switch (token.type) {
+            case TokenType::Number: output += "Number          "; break;
+            case TokenType::Symbol: output += "Symbol          "; break;
+            case TokenType::EqualSign: output += "EqualSign       "; break;
+            case TokenType::Semicolon: output += "Semicolon       "; break;
+        }
+
+        output += token.body + "\n";
+
+    }
+
+    emit("lex.txt", output);
+
     return tokens;
 }
 
