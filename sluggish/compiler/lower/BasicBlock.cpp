@@ -2,6 +2,7 @@
 #include "stage-emit/Emit.hpp"
 
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -10,20 +11,20 @@ namespace sluggish {
 BasicBlock lower(const Resolver& resolver) {
 
     BasicBlock block;
-    std::unordered_map<const Declaration*, std::size_t> slots;
+    std::unordered_map<const ResolvedDeclaration*, std::size_t> slots;
 
     for (const auto& statement : resolver.statements) {
 
-        if (const auto* declaration = dynamic_cast<const Declaration*>(statement.get())) {
+        if (const auto* declaration = dynamic_cast<const ResolvedDeclaration*>(statement.get())) {
 
             auto instruction = std::make_unique<AllocateInstruction>();
             instruction->slot = slots.size();
-            instruction->type_name = declaration->type_name;
+            instruction->type = declaration->type;
 
             slots.emplace(declaration, instruction->slot);
             block.instructions.push_back(std::move(instruction));
 
-        } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement.get())) {
+        } else if (const auto* assignment = dynamic_cast<const ResolvedAssignment*>(statement.get())) {
 
             auto instruction = std::make_unique<StoreInstruction>();
             instruction->slot = slots.at(assignment->declaration);
@@ -44,11 +45,11 @@ BasicBlock lower(const Resolver& resolver) {
 
         if (const auto* allocate = dynamic_cast<const AllocateInstruction*>(instruction.get())) {
 
-            output += "    Allocate        s" + std::to_string(allocate->slot) + ", " + allocate->type_name + "\n";
+            output += "    Allocate        s" + std::to_string(allocate->slot) + ", " + allocate->type->name() + "\n";
 
         } else if (const auto* store = dynamic_cast<const StoreInstruction*>(instruction.get())) {
 
-            output += "    Store           s" + std::to_string(store->slot) + ", " + store->value + "\n";
+            output += "    Store           s" + std::to_string(store->slot) + ", " + std::to_string(store->value) + "\n";
 
         }
 

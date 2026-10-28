@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scope.hpp"
+#include "ResolvedStatement.hpp"
 #include "parse/Parser.hpp"
 
 #include <memory>
@@ -11,7 +12,7 @@ namespace sluggish {
 class Resolver {
 public:
 
-    std::vector<std::unique_ptr<Statement>> statements;
+    std::vector<std::unique_ptr<ResolvedStatement>> statements;
     Scope scope;
 
     // Initialized declarations become a declaration followed by an assignment.

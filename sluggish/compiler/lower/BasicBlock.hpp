@@ -1,10 +1,11 @@
 #pragma once
 
 #include "resolver/Resolver.hpp"
+#include "type-system/Type.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace sluggish {
@@ -17,14 +18,14 @@ struct BasicBlockInstruction {
 struct AllocateInstruction : public BasicBlockInstruction {
 
     std::size_t slot;
-    std::string type_name;
+    const Type* type = nullptr;
 
 };
 
 struct StoreInstruction : public BasicBlockInstruction {
 
     std::size_t slot;
-    std::string value; // Number text until we define the built-in type.
+    std::uint16_t value;
 
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parse/Parser.hpp"
+#include "ResolvedStatement.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -11,9 +11,9 @@ class Scope {
 public:
 
     // Names map to declarations owned by Resolver::statements.
-    std::unordered_map<std::string, const Declaration*> symbols;
+    std::unordered_map<std::string, const ResolvedDeclaration*> symbols;
 
-    const Declaration* find(const std::string& name) const {
+    const ResolvedDeclaration* find(const std::string& name) const {
 
         const auto symbol = symbols.find(name);
 

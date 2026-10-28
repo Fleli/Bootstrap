@@ -3,16 +3,19 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 CPPFLAGS = -Isluggish/compiler
 
 SOURCES = sluggish/compiler/main.cpp \
+	sluggish/compiler/type-system/Type.cpp \
 	sluggish/compiler/lex/Lexer.cpp \
 	sluggish/compiler/parse/Parser.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \
 	sluggish/compiler/stage-emit/Emit.cpp
 
-HEADERS = sluggish/compiler/lex/Lexer.hpp \
+HEADERS = sluggish/compiler/type-system/Type.hpp \
+	sluggish/compiler/lex/Lexer.hpp \
 	sluggish/compiler/lex/Token.hpp \
 	sluggish/compiler/parse/Parser.hpp \
 	sluggish/compiler/resolver/Resolver.hpp \
+	sluggish/compiler/resolver/ResolvedStatement.hpp \
 	sluggish/compiler/resolver/Scope.hpp \
 	sluggish/compiler/lower/BasicBlock.hpp \
 	sluggish/compiler/stage-emit/Emit.hpp

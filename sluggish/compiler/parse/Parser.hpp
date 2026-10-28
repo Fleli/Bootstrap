@@ -25,8 +25,6 @@ struct Assignment : public Statement {
     std::string name;
     std::string value; // Number text.
 
-    const Declaration* declaration = nullptr; // Set by the resolver; non-owning.
-    
 };
 
 // Parses the entire token sequence; throws std::runtime_error on invalid syntax.
