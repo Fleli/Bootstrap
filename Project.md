@@ -9,22 +9,25 @@
     - Core should be routine given PMax implementation
     - Extensions (generics, meta-programming, real library support) are new challenges
     - Keep extremely light to implement quickly
-2. Library `Slughw` implemented in `sluggish` for hardware design (HDL library)
+2. Basic emulator
+    - Not direct hardware simulation, but direct execution of statements according to the CPU's ISA
+    - Higher-level abstraction of 4.
+3. Library `Slughw` implemented in `sluggish` for hardware design (HDL library)
     - Build without introducing one-off language features; implement purely as importable library
-3. Hardware simulator for `Slughw` output testing
+4. Hardware simulator for `Slughw` output testing
     - Light Logisim-like simulation for correctness checks of `Slughw` output
-4. Miniature CPU implementation in `Slughw` -> FPGA realization
+5. Miniature CPU implementation in `Slughw` -> FPGA realization
     - Should be routine given breadboard CPU implementation
     - Not really meant as a CPU project, but just to honour the bootstrap philosophy
-5. Miniature GPU/ASIC implementation in `Slughw` -> FPGA realization
+6. Miniature GPU/ASIC implementation in `Slughw` -> FPGA realization
     - Key part of the project; fairly unfamiliar with GPU internals
     - Look into old Nvidia chips + Google TPUs
-6. Library `Slugdx` implemented in `sluggish` for auto-differentiation
+7. Library `Slugdx` implemented in `sluggish` for auto-differentiation
     - Have used JAX but don't know its exact internals
     - Forward tracing should be pretty easy to implement, though (with meta-programming features)
     - Can maybe build e.g. `struct` instances so `Slugdx.Int` has an `__add__` function which then traces `f` and `df/dx` simultaneously for each `f` and `x` -> build Jacobi matrix stepwise
-7. Library `Slugml` implemented on top of `Slugdx` for general-purpose ML workflows
-8. Small LLM implementation on top of `Slugml`; hopefully ~1 million parameters
+8. Library `Slugml` implemented on top of `Slugdx` for general-purpose ML workflows
+9. Small LLM implementation on top of `Slugml`; hopefully ~1 million parameters
 
 **Reflections**
 - Project is extremely serial; later steps are dependent on earlier ones
