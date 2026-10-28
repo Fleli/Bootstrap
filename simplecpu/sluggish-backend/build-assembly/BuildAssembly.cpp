@@ -7,7 +7,7 @@
 
 namespace simplecpu {
 
-std::string build_assembly(const sluggish::BasicBlock& block) {
+std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
 
     // Each store_imm occupies three words; the final halt occupies one.
     std::uint64_t next_address = 1;
@@ -27,7 +27,7 @@ std::string build_assembly(const sluggish::BasicBlock& block) {
 
     }
 
-    std::string assembly = "block_0:\n";
+    std::vector<Instruction> assembly;
     std::unordered_map<std::size_t, std::uint32_t> addresses;
 
     for (const auto& instruction : block.instructions) {
@@ -56,7 +56,7 @@ std::string build_assembly(const sluggish::BasicBlock& block) {
                 throw std::runtime_error("Unallocated storage slot: " + std::to_string(store->slot));
             }
 
-            assembly += "    store_imm       " + std::to_string(address->second) + ", " + std::to_string(store->value) + "\n";
+            assembly.push_back({Opcode::StoreImm, address->second, store->value});
 
         } else {
 
@@ -66,7 +66,8 @@ std::string build_assembly(const sluggish::BasicBlock& block) {
 
     }
 
-    return assembly + "    halt\n";
+    assembly.push_back({Opcode::Halt});
+    return assembly;
 
 }
 

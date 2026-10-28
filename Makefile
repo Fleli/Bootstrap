@@ -1,6 +1,6 @@
 CXX = c++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
-CPPFLAGS = -Isluggish/compiler
+CPPFLAGS = -Isluggish/compiler -Isimplecpu
 
 COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/type-system/Type.cpp \
@@ -22,29 +22,30 @@ COMPILER_HEADERS = sluggish/compiler/Compiler.hpp \
 	sluggish/compiler/lower/BasicBlock.hpp \
 	sluggish/compiler/stage-emit/Emit.hpp
 
-BACKEND_SOURCES = simplecpu/sluggish-backend/build-assembly/main.cpp \
-	simplecpu/sluggish-backend/build-assembly/BuildAssembly.cpp
+CPU_SOURCES = simplecpu/main.cpp \
+	simplecpu/isa/Instruction.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildAssembly.cpp \
+	simplecpu/assembler/Assembler.cpp \
+	simplecpu/emulator/Emulator.cpp
 
-BACKEND_HEADERS = simplecpu/sluggish-backend/build-assembly/BuildAssembly.hpp
+CPU_HEADERS = simplecpu/isa/Instruction.hpp \
+	simplecpu/sluggish-backend/build-assembly/BuildAssembly.hpp \
+	simplecpu/assembler/Assembler.hpp \
+	simplecpu/emulator/Emulator.hpp
 
-EMULATOR_SOURCES = simplecpu/emulator/main.cpp simplecpu/emulator/Emulator.cpp
+.PHONY: assemble assembly run
 
-.PHONY: assembly run
+assemble: simplecpu/build/simplecpu
+	./simplecpu/build/simplecpu < sluggish/design/language/dev-script.slug
 
-assembly: simplecpu/build/build-assembly
-	mkdir -p simplecpu/intermediate
-	./simplecpu/build/build-assembly < sluggish/design/language/dev-script.slug > simplecpu/intermediate/assembly.txt
+assembly: assemble
 
-run: simplecpu/build/emulator
-	./simplecpu/build/emulator
+run: simplecpu/build/simplecpu
+	./simplecpu/build/simplecpu --run < sluggish/design/language/dev-script.slug
 
-simplecpu/build/emulator: $(EMULATOR_SOURCES) simplecpu/emulator/Emulator.hpp Makefile
+simplecpu/build/simplecpu: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(CPU_SOURCES) $(CPU_HEADERS) Makefile
 	mkdir -p simplecpu/build
-	$(CXX) $(CXXFLAGS) $(EMULATOR_SOURCES) -o $@
-
-simplecpu/build/build-assembly: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(BACKEND_SOURCES) $(BACKEND_HEADERS) Makefile
-	mkdir -p simplecpu/build
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) $(BACKEND_SOURCES) -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) $(CPU_SOURCES) -o $@
 
 sluggish/build/sluggish: sluggish/compiler/main.cpp $(COMPILER_SOURCES) $(COMPILER_HEADERS) Makefile
 	mkdir -p sluggish/build

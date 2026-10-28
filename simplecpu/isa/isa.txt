@@ -30,3 +30,6 @@ opcode      instruction     format          operands
 2           load_imm        D               (target-reg, immediate int)
 3           store           E               (address reg, value reg)
 4           load            E               (target-reg, source addr)
+
+The backend passes structured instructions directly to the assembler.
+Assembly text and hexadecimal words are emitted as readable dumps.
