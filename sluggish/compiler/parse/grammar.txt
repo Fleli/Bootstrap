@@ -1,0 +1,24 @@
+Sluggish grammar -- design reference, not a parser generator input.
+
+program        -> statement program | empty
+statement      -> Symbol statement_tail
+statement_tail -> Symbol initializer ";"
+                | "=" Number ";"
+initializer    -> "=" Number | empty
+
+Terminals:
+  Symbol  = a name (TokenType::Symbol), including type and variable names
+  Number  = a decimal integer literal (TokenType::Number)
+  "="     = TokenType::EqualSign
+  ";"     = TokenType::Semicolon
+
+empty consumes no tokens. The program must consume the entire token sequence.
+
+Examples:
+  word_t x;       -- declaration
+  word_t x = 5;   -- declaration with initializer
+  x = 5;          -- assignment
+
+LL(1): after the first Symbol, another Symbol starts a declaration;
+"=" starts an assignment. An initializer is absent when the next token is ";".
+Whether a name refers to a valid type or variable is checked after parsing.
