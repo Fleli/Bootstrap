@@ -13,14 +13,20 @@ struct Statement {
 };
 
 struct Declaration : public Statement {
-    std::string type_name;
+    
     std::string name;
+    std::string type_name;
     std::string initializer; // Number text; empty when absent.
+    
 };
 
 struct Assignment : public Statement {
+    
     std::string name;
     std::string value; // Number text.
+
+    const Declaration* declaration = nullptr; // Set by the resolver; non-owning.
+    
 };
 
 // Parses the entire token sequence; throws std::runtime_error on invalid syntax.
