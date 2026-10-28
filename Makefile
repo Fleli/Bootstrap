@@ -2,7 +2,7 @@ CXX = c++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 CPPFLAGS = -Isluggish/compiler
 
-SOURCES = sluggish/compiler/main.cpp \
+COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/type-system/Type.cpp \
 	sluggish/compiler/lex/Lexer.cpp \
 	sluggish/compiler/parse/Parser.cpp \
@@ -10,7 +10,9 @@ SOURCES = sluggish/compiler/main.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \
 	sluggish/compiler/stage-emit/Emit.cpp
 
-HEADERS = sluggish/compiler/type-system/Type.hpp \
+COMPILER_HEADERS = sluggish/compiler/Compiler.hpp \
+	sluggish/compiler/IR.hpp \
+	sluggish/compiler/type-system/Type.hpp \
 	sluggish/compiler/lex/Lexer.hpp \
 	sluggish/compiler/lex/Token.hpp \
 	sluggish/compiler/parse/Parser.hpp \
@@ -20,11 +22,21 @@ HEADERS = sluggish/compiler/type-system/Type.hpp \
 	sluggish/compiler/lower/BasicBlock.hpp \
 	sluggish/compiler/stage-emit/Emit.hpp
 
+BACKEND_SOURCES = simplecpu/sluggish-backend/build-assembly/main.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildAssembly.cpp
+
+BACKEND_HEADERS = simplecpu/sluggish-backend/build-assembly/BuildAssembly.hpp
+
 .PHONY: run
 
-run: sluggish/build/sluggish
-	./sluggish/build/sluggish < sluggish/design/language/dev-script.slug
+run: simplecpu/build/build-assembly
+	mkdir -p simplecpu/intermediate
+	./simplecpu/build/build-assembly < sluggish/design/language/dev-script.slug > simplecpu/intermediate/assembly.txt
 
-sluggish/build/sluggish: $(SOURCES) $(HEADERS) Makefile
+simplecpu/build/build-assembly: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(BACKEND_SOURCES) $(BACKEND_HEADERS) Makefile
+	mkdir -p simplecpu/build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) $(BACKEND_SOURCES) -o $@
+
+sluggish/build/sluggish: sluggish/compiler/main.cpp $(COMPILER_SOURCES) $(COMPILER_HEADERS) Makefile
 	mkdir -p sluggish/build
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SOURCES) -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) sluggish/compiler/main.cpp -o $@

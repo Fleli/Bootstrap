@@ -1,7 +1,4 @@
-#include "lex/Lexer.hpp"
-#include "lower/BasicBlock.hpp"
-#include "parse/Parser.hpp"
-#include "resolver/Resolver.hpp"
+#include "Compiler.hpp"
 
 #include <exception>
 #include <iostream>
@@ -13,11 +10,7 @@ int main() {
     source << std::cin.rdbuf();
 
     try {
-        const auto tokens = sluggish::lex(source.str());
-        const auto parsed = sluggish::parse(tokens);
-
-        const sluggish::Resolver resolver(parsed);
-        const auto block = sluggish::lower(resolver);
+        sluggish::compile(source.str());
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

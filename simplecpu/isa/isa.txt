@@ -1,5 +1,6 @@
 
 32-bit word width
+Each RAM address selects one 32-bit word.
 
 opcode      0-[31:24]
 
