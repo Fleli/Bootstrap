@@ -1,0 +1,6 @@
+
+word_8 smallInt;
+smallInt = 6;
+
+word_16 bigInt;
+bigInt = 35000;
