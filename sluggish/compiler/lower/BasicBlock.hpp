@@ -32,6 +32,7 @@ struct BasicBlock {
     std::vector<std::unique_ptr<BasicBlockInstruction>> instructions;
 };
 
+// Lowers into one block and writes intermediate/lower.txt.
 BasicBlock lower(const Resolver& resolver);
 
 } // namespace sluggish

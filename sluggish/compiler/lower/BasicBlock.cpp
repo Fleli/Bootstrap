@@ -1,4 +1,5 @@
 #include "BasicBlock.hpp"
+#include "stage-emit/Emit.hpp"
 
 #include <stdexcept>
 #include <unordered_map>
@@ -36,6 +37,24 @@ BasicBlock lower(const Resolver& resolver) {
         }
 
     }
+
+    std::string output = "BasicBlock 0:\n";
+
+    for (const auto& instruction : block.instructions) {
+
+        if (const auto* allocate = dynamic_cast<const AllocateInstruction*>(instruction.get())) {
+
+            output += "    Allocate        s" + std::to_string(allocate->slot) + ", " + allocate->type_name + "\n";
+
+        } else if (const auto* store = dynamic_cast<const StoreInstruction*>(instruction.get())) {
+
+            output += "    Store           s" + std::to_string(store->slot) + ", " + store->value + "\n";
+
+        }
+
+    }
+
+    emit("lower.txt", output);
 
     return block;
 
