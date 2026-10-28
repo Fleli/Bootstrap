@@ -14,6 +14,8 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
             auto resolved = std::make_unique<Declaration>();
             resolved->type_name = declaration->type_name;
             resolved->name = declaration->name;
+
+            scope.symbols.emplace(resolved->name, resolved.get());
             statements.push_back(std::move(resolved));
 
             if (!declaration->initializer.empty()) {
