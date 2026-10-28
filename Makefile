@@ -27,11 +27,20 @@ BACKEND_SOURCES = simplecpu/sluggish-backend/build-assembly/main.cpp \
 
 BACKEND_HEADERS = simplecpu/sluggish-backend/build-assembly/BuildAssembly.hpp
 
-.PHONY: run
+EMULATOR_SOURCES = simplecpu/emulator/main.cpp simplecpu/emulator/Emulator.cpp
 
-run: simplecpu/build/build-assembly
+.PHONY: assembly run
+
+assembly: simplecpu/build/build-assembly
 	mkdir -p simplecpu/intermediate
 	./simplecpu/build/build-assembly < sluggish/design/language/dev-script.slug > simplecpu/intermediate/assembly.txt
+
+run: simplecpu/build/emulator
+	./simplecpu/build/emulator
+
+simplecpu/build/emulator: $(EMULATOR_SOURCES) simplecpu/emulator/Emulator.hpp Makefile
+	mkdir -p simplecpu/build
+	$(CXX) $(CXXFLAGS) $(EMULATOR_SOURCES) -o $@
 
 simplecpu/build/build-assembly: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(BACKEND_SOURCES) $(BACKEND_HEADERS) Makefile
 	mkdir -p simplecpu/build
