@@ -31,3 +31,6 @@
 - Unfamiliar with internals of both JAX and HDL compilers
 - Should keep development in each step narrow -> get deeper through the pipeline quickly
     - Then thicken as needed; e.g. add generics to `sluggish` while developing `Slugdx` or similar.
+- Implement compiler frontend very quickly -> get to IR and potentially machine code emission fast
+- Then, get into `Slughw` design, even if the language itself will be extended. Also keep the `Slughw` implementation very minimal so we can quckly get to the hardware simulator + a miniature CPU implementation
+- Deepen pipeline quickly plus build large test array -> iterative work (widening of each step's functionality) should be easier
