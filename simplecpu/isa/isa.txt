@@ -1,0 +1,31 @@
+
+32-bit word width
+
+opcode      0-[31:24]
+
+instruction formats:
+* operands are (index-after-opcode)-[bitrange]
+
+A
+    (none)
+B
+    operand_a   0-[23:16]
+    operand_b   0-[15:08]
+    operand_c   0-[07:00]
+C
+    word_a      1-[31:0]
+    word_b      2-[31:0]
+D   
+    register    0-[23:16]
+    word_a      1-[31:0]
+E 
+    reg_a       0-[23:16]
+    reg_b       0-[15:08]
+
+
+opcode      instruction     format          operands
+0           halt            A               -
+1           store_imm       C               (ram address, immediate int)
+2           load_imm        D               (target-reg, immediate int)
+3           store           E               (address reg, value reg)
+4           load            E               (target-reg, source addr)
