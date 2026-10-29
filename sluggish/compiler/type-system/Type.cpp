@@ -1,10 +1,11 @@
 #include "Type.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace sluggish {
 
-Type::Type(unsigned int bits) : width(bits) {
+Type::Type(unsigned int bits) : width(bits), type_name("word_" + std::to_string(bits)) {
 
     if (bits == 0 || bits > 16) {
         throw std::runtime_error("Unsupported word width: " + std::to_string(bits));
@@ -12,11 +13,17 @@ Type::Type(unsigned int bits) : width(bits) {
 
 }
 
+Type::Type(std::string name) : structure(true), type_name(std::move(name)) {}
+
 std::string Type::name() const {
-    return "word_" + std::to_string(width);
+    return type_name;
 }
 
 std::uint16_t Type::parse_literal(const std::string& text) const {
+
+    if (is_struct()) {
+        throw std::runtime_error("Cannot initialize struct " + name() + " with a number");
+    }
 
     if (text.empty()) {
         throw std::runtime_error("Expected a decimal literal for " + name());

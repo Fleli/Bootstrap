@@ -4,6 +4,7 @@ CPPFLAGS = -Isluggish/compiler -Isimplecpu
 
 COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/type-system/Type.cpp \
+	sluggish/compiler/type-system/TypeTable.cpp \
 	sluggish/compiler/lex/Lexer.cpp \
 	sluggish/compiler/parse/Parser.cpp \
 	sluggish/compiler/parse/ParseExpression.cpp \
@@ -13,6 +14,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
 	sluggish/compiler/resolver/ResolveExpression.cpp \
 	sluggish/compiler/resolver/ResolveStatement.cpp \
+	sluggish/compiler/resolver/ResolveStruct.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \
 	sluggish/compiler/lower/AllocateSlot.cpp \
 	sluggish/compiler/lower/LowerExpression.cpp \
@@ -22,6 +24,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 COMPILER_HEADERS = sluggish/compiler/Compiler.hpp \
 	sluggish/compiler/IR.hpp \
 	sluggish/compiler/type-system/Type.hpp \
+	sluggish/compiler/type-system/TypeTable.hpp \
 	sluggish/compiler/lex/Lexer.hpp \
 	sluggish/compiler/lex/Token.hpp \
 	sluggish/compiler/parse/Parser.hpp \

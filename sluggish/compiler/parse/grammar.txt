@@ -161,7 +161,13 @@ Each call gets a temporary result slot with the function's return type.
 The lower dump prints Call destination, function(argument slots).
 Calls execute through the SimpleCPU stack calling convention.
 
-Struct definitions and member expressions are currently supported by the lexer and parser only.
-Struct type resolution, lvalue validation, copying and execution will follow in later stages.
+The resolver registers all struct names before resolving their members. Its type table
+looks up both built-in words and structs, and each struct keeps its members in declaration order.
+Duplicate type names (including built-in names), duplicate members, unknown member types,
+and direct or indirect recursive containment by value are rejected.
+Structs may refer to other structs defined later, and may reuse the same member type.
+For now this table resolves struct definitions only. Function signatures and local variables
+still use built-in types; member expressions, lvalue validation, copying and execution
+will follow in later stages. Struct types are owned by their resolver's type table.
 Assignment.name is temporarily retained for the existing resolver, and populated only
 for plain-variable targets. Assignment.target contains the complete parsed expression.

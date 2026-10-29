@@ -3,6 +3,7 @@
 #include "Scope.hpp"
 #include "ResolvedStatement.hpp"
 #include "parse/Parser.hpp"
+#include "type-system/TypeTable.hpp"
 
 #include <memory>
 #include <string>
@@ -14,6 +15,7 @@ namespace sluggish {
 class Resolver {
 public:
 
+    TypeTable types;
     std::vector<std::unique_ptr<ResolvedFunction>> functions;
 
     // Each function owns its arguments and flattened body statements.
@@ -22,6 +24,8 @@ public:
 private:
 
     std::unordered_map<std::string, ResolvedFunction*> function_symbols;
+
+    void resolve_struct_members(const StructDefinition& definition);
 
     void register_function_signature(const Statement* statement);
     void resolve_function_body(const Statement* statement);
