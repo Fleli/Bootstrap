@@ -41,7 +41,7 @@ CPU_HEADERS = simplecpu/isa/Instruction.hpp \
 	simplecpu/assembler/Assembler.hpp \
 	simplecpu/emulator/Emulator.hpp
 
-.PHONY: assemble assembly run regressions
+.PHONY: assemble assembly run regression regressions
 
 assemble: simplecpu/build/simplecpu
 	./simplecpu/build/simplecpu < sluggish/design/language/dev-script.slug
@@ -50,6 +50,8 @@ assembly: assemble
 
 run: simplecpu/build/simplecpu
 	./simplecpu/build/simplecpu --run < sluggish/design/language/dev-script.slug
+
+regression: regressions
 
 regressions: sluggish/build/regressions
 	./sluggish/build/regressions
