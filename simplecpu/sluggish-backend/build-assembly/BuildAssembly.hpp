@@ -7,7 +7,8 @@
 
 namespace simplecpu {
 
-// Code starts at RAM word 0. Data follows it, with one word per storage slot.
-std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block);
+// Builds only zero-argument main, starting at RAM word 0 and returning in r0.
+// Data follows the code, with one word per storage slot.
+std::vector<Instruction> build_assembly(const std::vector<sluggish::IRFunction>& functions);
 
 } // namespace simplecpu

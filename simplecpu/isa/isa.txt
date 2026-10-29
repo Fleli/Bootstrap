@@ -33,3 +33,8 @@ opcode      instruction     format          operands
 
 The backend passes structured instructions directly to the assembler.
 Assembly text and hexadecimal words are emitted as readable dumps.
+
+The backend currently emits only the zero-argument main function, starting at RAM word 0.
+Variable storage follows its code, with one 32-bit word per slot.
+A return places the result in r0 and halts. The runner prints this value.
+Other functions are not emitted until function calls are supported.

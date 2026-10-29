@@ -25,19 +25,14 @@ int main(int argc, char* argv[]) {
     try {
 
         const auto functions = sluggish::compile(source.str());
-
-        if (!functions.empty()) {
-            throw std::runtime_error("Function assembly is not implemented yet");
-        }
-
-        const auto assembly = simplecpu::build_assembly(sluggish::BasicBlock{});
+        const auto assembly = simplecpu::build_assembly(functions);
         const auto words = simplecpu::assemble(assembly);
 
         std::filesystem::create_directories("simplecpu/intermediate");
         std::ofstream text("simplecpu/intermediate/assembly.txt");
         std::ofstream hex("simplecpu/intermediate/program.hex");
 
-        text << "block_0:\n";
+        text << "main:\n";
         for (const auto& instruction : assembly) {
             text << "    " << instruction.text() << "\n";
         }
@@ -70,6 +65,8 @@ int main(int argc, char* argv[]) {
                     std::cout << "RAM[" << address << "] = " << cpu.ram[address] << "\n";
                 }
             }
+
+            std::cout << "Return value: " << cpu.registers[0] << "\n";
 
         }
 

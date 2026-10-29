@@ -7,9 +7,36 @@
 
 namespace simplecpu {
 
-std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
+std::vector<Instruction> build_assembly(const std::vector<sluggish::IRFunction>& functions) {
 
-    // The final halt occupies one word; stores need three and copies need six.
+    const sluggish::IRFunction* entry = nullptr;
+
+    for (const auto& function : functions) {
+        if (function.name == "main") {
+            entry = &function;
+            break;
+        }
+    }
+
+    if (entry == nullptr) {
+        throw std::runtime_error("Missing entry function: main");
+    }
+
+    if (!entry->arguments.empty()) {
+        throw std::runtime_error("main must not take arguments");
+    }
+
+    if (entry->blocks.size() != 1) {
+        throw std::runtime_error("SimpleCPU requires one basic block in main");
+    }
+
+    const auto& block = entry->blocks.front();
+
+    if (block.instructions.empty() || dynamic_cast<const sluggish::ReturnInstruction*>(block.instructions.back().get()) == nullptr) {
+        throw std::runtime_error("main must end with a return");
+    }
+
+    // Start with the final halt; count the other instruction words below.
     std::uint64_t next_address = 1;
     const std::uint64_t maximum_address = std::numeric_limits<std::uint32_t>::max();
 
@@ -22,6 +49,18 @@ std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
         } else if (dynamic_cast<const sluggish::CopyInstruction*>(instruction.get())) {
 
             next_address += 6;
+
+        } else if (const auto* returned = dynamic_cast<const sluggish::ReturnInstruction*>(instruction.get())) {
+
+            if (instruction.get() != block.instructions.back().get()) {
+                throw std::runtime_error("Return must be the final instruction in main");
+            }
+
+            next_address += 2;
+
+            if (returned->source_slot.has_value()) {
+                ++next_address;
+            }
 
         }
 
@@ -71,6 +110,20 @@ std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
             assembly.push_back({Opcode::Load, 1, 0});
             assembly.push_back({Opcode::LoadImm, 0, destination});
             assembly.push_back({Opcode::Store, 0, 1});
+
+        } else if (const auto* returned = dynamic_cast<const sluggish::ReturnInstruction*>(instruction.get())) {
+
+            if (returned->source_slot.has_value()) {
+
+                const auto address = addresses.at(*returned->source_slot);
+                assembly.push_back({Opcode::LoadImm, 0, address});
+                assembly.push_back({Opcode::Load, 0, 0});
+
+            } else {
+
+                assembly.push_back({Opcode::LoadImm, 0, returned->value});
+
+            }
 
         } else {
 

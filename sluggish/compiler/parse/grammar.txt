@@ -68,7 +68,8 @@ an additional nested scope. Duplicate function names and duplicate argument name
 within one function are rejected. Return and argument types are resolved before
 the body. Each resolved function keeps its arguments and flattened body separate.
 Each function lowers to its own IR function with typed argument slots and one block.
-CPU function translation is not implemented yet.
+SimpleCPU executes a zero-argument main, placing its return value in r0 and halting.
+Other functions are checked by the compiler but are not emitted by the CPU backend yet.
 Returned literals must fit the enclosing function's return type. Returned variables
 are looked up in the current scope and must have exactly that return type.
 Every function must contain a return. With no branches or loops, a return inside
