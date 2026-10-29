@@ -36,6 +36,13 @@ struct ResolvedVariableExpression : public ResolvedExpression {
     const ResolvedDeclaration* declaration = nullptr;
 };
 
+struct ResolvedAdditionExpression : public ResolvedExpression {
+
+    std::unique_ptr<ResolvedExpression> left;
+    std::unique_ptr<ResolvedExpression> right;
+
+};
+
 struct ResolvedAssignment : public ResolvedStatement {
 
     std::unique_ptr<ResolvedExpression> value;

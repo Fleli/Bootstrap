@@ -63,13 +63,17 @@ Each "+" wraps the accumulated expression as its left child and the next primary
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition to show its tree structure.
-Addition is currently supported only by the lexer and parser; resolution and lowering are pending.
+Addition is resolved recursively; lowering and execution are pending.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
 The resolver checks that each assigned literal fits its declared type.
 Variable assignments require declared source and target variables of the same type.
 Initializers, assignments and returns share expression resolution using the expected type.
-Resolved expressions carry their type and either a numeric value or a declaration reference.
+Resolved expressions carry their type and a numeric value, a declaration reference,
+or left and right operands for addition.
+Addition operands must have the same type, which is also the result type.
+Literals use the expected type from the assignment or return context.
+Addition results are not evaluated or checked for overflow during resolution.
 Duplicate declarations are rejected only within the current scope.
 Variable lookup searches the current scope, then its enclosing scopes.
 An inner declaration can shadow an outer name; names declared inside do not escape.

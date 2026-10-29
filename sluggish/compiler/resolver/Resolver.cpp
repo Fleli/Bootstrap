@@ -38,6 +38,16 @@ std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* express
 
     }
 
+    if (const auto* addition = dynamic_cast<const AdditionExpression*>(expression)) {
+
+        auto resolved = std::make_unique<ResolvedAdditionExpression>();
+        resolved->left = resolve_expression(addition->left.get(), scope, expected_type);
+        resolved->right = resolve_expression(addition->right.get(), scope, resolved->left->type);
+        resolved->type = resolved->left->type;
+        return resolved;
+
+    }
+
     throw std::runtime_error("Unsupported expression in resolver");
 
 }
