@@ -30,13 +30,14 @@ Terminals:
 empty consumes no tokens. The program must consume the entire token sequence.
 
 Examples:
-  word_8 empty() {}
+  word_8 zero() { return 0; }
   word_8 example(word_8 a, word_16 b) {
       word_8 x = a;
       { word_8 x = 5; }
       x = 6;
+      return x;
   }
-  word_8 single(word_8 x) x = 5;
+  word_8 single(word_8 x) return x;
   word_8 constant() return 5;
   word_8 identity(word_8 x) { return x; }
 
@@ -70,7 +71,8 @@ Each function lowers to its own IR function with typed argument slots and one bl
 CPU function translation is not implemented yet.
 Returned literals must fit the enclosing function's return type. Returned variables
 are looked up in the current scope and must have exactly that return type.
-Missing returns and unreachable statements are not checked yet.
+Every function must contain a return. With no branches or loops, a return inside
+a nested block is sufficient. Unreachable statements are not diagnosed.
 Returns lower to an IR return instruction with either a literal or a source slot.
 Lowering ends the function's block at the first return and emits no later statements.
 The resolver still validates those later statements.

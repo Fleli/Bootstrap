@@ -44,6 +44,20 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
         }
 
         resolve(function->body.get(), function_scope, *resolved);
+
+        bool has_return = false;
+
+        for (const auto& body_statement : resolved->statements) {
+            if (dynamic_cast<const ResolvedReturn*>(body_statement.get()) != nullptr) {
+                has_return = true;
+                break;
+            }
+        }
+
+        if (!has_return) {
+            throw std::runtime_error("Missing return in function: " + function->name);
+        }
+
         functions.push_back(std::move(resolved));
 
     }
