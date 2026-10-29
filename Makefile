@@ -8,6 +8,9 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/parse/Parser.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \
+	sluggish/compiler/lower/AllocateSlot.cpp \
+	sluggish/compiler/lower/LowerExpression.cpp \
+	sluggish/compiler/lower/LowerFunction.cpp \
 	sluggish/compiler/stage-emit/Emit.cpp
 
 COMPILER_HEADERS = sluggish/compiler/Compiler.hpp \
