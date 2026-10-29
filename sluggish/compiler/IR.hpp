@@ -37,6 +37,14 @@ struct CopyInstruction : public BasicBlockInstruction {
 
 };
 
+struct AddInstruction : public BasicBlockInstruction {
+
+    std::size_t left_slot;
+    std::size_t right_slot;
+    std::size_t destination_slot;
+
+};
+
 // Ends the block and returns from the function.
 struct ReturnInstruction : public BasicBlockInstruction {
 
