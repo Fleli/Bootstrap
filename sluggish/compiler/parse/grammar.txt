@@ -57,5 +57,8 @@ Declarations become visible in source order; forward references are not allowed.
 Initialization is not checked yet.
 
 A function introduces a scope containing its arguments. A block body introduces
-an additional nested scope. Function resolution is not implemented yet.
+an additional nested scope. Duplicate function names and duplicate argument names
+within one function are rejected. Return and argument types are resolved before
+the body. Each resolved function keeps its arguments and flattened body separate.
+Function lowering is not implemented yet.
 Return statements and function calls are not supported yet.

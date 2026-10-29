@@ -8,12 +8,14 @@
 
 namespace sluggish {
 
-BasicBlock lower(const Resolver& resolver) {
+namespace {
+
+BasicBlock lower_statements(const std::vector<std::unique_ptr<ResolvedStatement>>& statements) {
 
     BasicBlock block;
     std::unordered_map<const ResolvedDeclaration*, std::size_t> slots;
 
-    for (const auto& statement : resolver.statements) {
+    for (const auto& statement : statements) {
 
         if (const auto* declaration = dynamic_cast<const ResolvedDeclaration*>(statement.get())) {
 
@@ -73,6 +75,18 @@ BasicBlock lower(const Resolver& resolver) {
     emit("lower.txt", output);
 
     return block;
+
+}
+
+} // namespace
+
+BasicBlock lower(const Resolver& resolver) {
+
+    if (!resolver.functions.empty()) {
+        throw std::runtime_error("Function lowering is not implemented yet");
+    }
+
+    return lower_statements({});
 
 }
 

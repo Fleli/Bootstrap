@@ -12,14 +12,13 @@ namespace sluggish {
 class Resolver {
 public:
 
-    std::vector<std::unique_ptr<ResolvedStatement>> statements;
-    Scope scope;
+    std::vector<std::unique_ptr<ResolvedFunction>> functions;
 
-    // Initialized declarations become a declaration followed by an assignment.
+    // Each function owns its arguments and flattened body statements.
     explicit Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_statements);
 
 private:
-    void resolve(const std::vector<std::unique_ptr<Statement>>& parsed_statements, Scope& current_scope);
+    void resolve(const Statement* statement, Scope& current_scope, ResolvedFunction& function);
 
 };
 

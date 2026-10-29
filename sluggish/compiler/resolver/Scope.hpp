@@ -12,7 +12,7 @@ public:
 
     const Scope* parent = nullptr;
 
-    // Names map to declarations owned by Resolver::statements.
+    // Names map to declarations owned by the resolved function.
     std::unordered_map<std::string, const ResolvedDeclaration*> symbols;
 
     const ResolvedDeclaration* find(const std::string& name) const {
