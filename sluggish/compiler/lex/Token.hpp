@@ -11,6 +11,9 @@ enum class TokenType {
     Semicolon,
     LeftBrace,
     RightBrace,
+    LeftParen,
+    RightParen,
+    Comma,
 };
 
 struct SourceReference {};
