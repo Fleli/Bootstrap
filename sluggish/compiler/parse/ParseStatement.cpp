@@ -2,11 +2,14 @@
 
 #include <memory>
 #include <stdexcept>
-#include <utility>
 
 namespace sluggish {
 
 std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std::size_t& i) {
+
+    if (i < tokens.size() && tokens[i].type == TokenType::Struct) {
+        throw std::runtime_error("Struct definitions are only allowed at top level");
+    }
 
     if (i < tokens.size() && tokens[i].type == TokenType::LeftBrace) {
 
@@ -33,51 +36,38 @@ std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std
 
     }
 
-    std::string name = consume(tokens, i, TokenType::Symbol, "a name").body;
-    const bool is_declaration = i < tokens.size() && tokens[i].type == TokenType::Symbol;
+    if (i + 1 < tokens.size() && tokens[i].type == TokenType::Symbol && tokens[i + 1].type == TokenType::Symbol) {
 
-    std::string type_name;
-
-    if (is_declaration) {
-
-        type_name = name;
-        name = tokens[i].body;
-        ++i;
+        auto declaration = std::make_unique<Declaration>();
+        declaration->type_name = tokens[i++].body;
+        declaration->name = tokens[i++].body;
 
         if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
             throw std::runtime_error("Function definitions are only allowed at top level");
         }
 
-    }
+        if (i < tokens.size() && tokens[i].type == TokenType::EqualSign) {
 
-    std::unique_ptr<Expression> value;
+            ++i;
+            declaration->initializer = parse_expression(tokens, i);
 
-    if (i < tokens.size() && tokens[i].type == TokenType::EqualSign) {
+        }
 
-        ++i;
-        value = parse_expression(tokens, i);
-
-    } else if (!is_declaration) {
-
-        throw std::runtime_error("Expected '=' at token " + std::to_string(i));
-
-    }
-
-    consume(tokens, i, TokenType::Semicolon, "';'");
-
-    if (is_declaration) {
-
-        auto statement = std::make_unique<Declaration>();
-        statement->name = name;
-        statement->type_name = type_name;
-        statement->initializer = std::move(value);
-        return statement;
+        consume(tokens, i, TokenType::Semicolon, "';'");
+        return declaration;
 
     }
 
     auto statement = std::make_unique<Assignment>();
-    statement->name = name;
-    statement->value = std::move(value);
+    statement->target = parse_expression(tokens, i);
+
+    if (const auto* variable = dynamic_cast<const VariableExpression*>(statement->target.get())) {
+        statement->name = variable->name;
+    }
+
+    consume(tokens, i, TokenType::EqualSign, "'='");
+    statement->value = parse_expression(tokens, i);
+    consume(tokens, i, TokenType::Semicolon, "';'");
     return statement;
 
 }

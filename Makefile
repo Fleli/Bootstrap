@@ -8,6 +8,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/parse/Parser.cpp \
 	sluggish/compiler/parse/ParseExpression.cpp \
 	sluggish/compiler/parse/ParseStatement.cpp \
+	sluggish/compiler/parse/ParseStruct.cpp \
 	sluggish/compiler/parse/Format.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
 	sluggish/compiler/resolver/ResolveExpression.cpp \

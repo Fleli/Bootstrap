@@ -1,15 +1,30 @@
 
+
+struct Point {
+    word_16 x;
+    word_16 y;
+}
+
+struct Line {
+    Point p1;
+    Point p2;
+}
+
 word_16 main() {
-    word_16 x = 4;
-    word_16 k = double(fifty() + x);
-    return k + 6;
+    
+    Point pt_1;
+    pt_1.x = 4;
+    pt_1.y = 5;
+    
+    Point pt_2;
+    pt_2.x = pt_1.x;
+    pt_2.y = pt_1.y + 1;
+    
+    Line l;
+    l.p1 = pt_1;
+    l.p2 = pt_2;
+    
+    word_16 dy = l.p2.y - l.p1.y;
+    return dy;
+    
 }
-
-word_16 fifty() {
-    word_16 x = 20;
-    word_16 y = x + 12 + 16;
-    return y + 2;
-}
-
-word_16 double(word_16 input) 
-    return input + input;

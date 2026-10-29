@@ -15,7 +15,9 @@ enum class TokenType {
     LeftParen,
     RightParen,
     Comma,
+    Dot,
     Return,
+    Struct,
 };
 
 struct SourceReference {};

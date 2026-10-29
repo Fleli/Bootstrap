@@ -68,18 +68,36 @@ std::unique_ptr<Expression> parse_primary(const std::vector<Token>& tokens, std:
 
 }
 
+std::unique_ptr<Expression> parse_postfix(const std::vector<Token>& tokens, std::size_t& i) {
+
+    auto expression = parse_primary(tokens, i);
+
+    while (i < tokens.size() && tokens[i].type == TokenType::Dot) {
+
+        ++i;
+        auto member = std::make_unique<MemberExpression>();
+        member->name = consume(tokens, i, TokenType::Symbol, "a member name after '.'").body;
+        member->object = std::move(expression);
+        expression = std::move(member);
+
+    }
+
+    return expression;
+
+}
+
 } // namespace
 
 std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i) {
 
-    auto expression = parse_primary(tokens, i);
+    auto expression = parse_postfix(tokens, i);
 
     while (i < tokens.size() && tokens[i].type == TokenType::PlusSign) {
 
         ++i;
         auto addition = std::make_unique<AdditionExpression>();
         addition->left = std::move(expression);
-        addition->right = parse_primary(tokens, i);
+        addition->right = parse_postfix(tokens, i);
         expression = std::move(addition);
 
     }

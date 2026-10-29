@@ -19,9 +19,14 @@ const Token& consume(const std::vector<Token>& tokens, std::size_t& i, TokenType
 std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) {
 
     std::size_t i = 0;
-    std::vector<std::unique_ptr<Statement>> functions;
+    std::vector<std::unique_ptr<Statement>> definitions;
 
     while (i < tokens.size()) {
+
+        if (tokens[i].type == TokenType::Struct) {
+            definitions.push_back(parse_struct(tokens, i));
+            continue;
+        }
 
         auto function = std::make_unique<Function>();
         function->return_type_name = consume(tokens, i, TokenType::Symbol, "a return type").body;
@@ -49,18 +54,18 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
 
         consume(tokens, i, TokenType::RightParen, "')'");
         function->body = parse_statement(tokens, i);
-        functions.push_back(std::move(function));
+        definitions.push_back(std::move(function));
 
     }
 
     std::string output;
 
-    for (const auto& function : functions) {
-        output += format_statement(function.get(), "");
+    for (const auto& definition : definitions) {
+        output += format_statement(definition.get(), "");
     }
 
     emit("parse.txt", output);
-    return functions;
+    return definitions;
 
 }
 

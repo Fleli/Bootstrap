@@ -52,6 +52,8 @@ std::vector<Token> lex(std::string_view source) {
             type = TokenType::RightParen;
         } else if (c == ',') {
             type = TokenType::Comma;
+        } else if (c == '.') {
+            type = TokenType::Dot;
         } else {
             throw std::runtime_error("Unexpected character at byte " + std::to_string(start));
         }
@@ -60,6 +62,8 @@ std::vector<Token> lex(std::string_view source) {
 
         if (type == TokenType::Symbol && body == "return") {
             type = TokenType::Return;
+        } else if (type == TokenType::Symbol && body == "struct") {
+            type = TokenType::Struct;
         }
 
         tokens.push_back({type, std::string(body)});
@@ -80,7 +84,9 @@ std::vector<Token> lex(std::string_view source) {
             case TokenType::LeftParen: output += "LeftParen       "; break;
             case TokenType::RightParen: output += "RightParen      "; break;
             case TokenType::Comma: output += "Comma           "; break;
+            case TokenType::Dot: output += "Dot             "; break;
             case TokenType::Return: output += "Return          "; break;
+            case TokenType::Struct: output += "Struct          "; break;
         }
 
         output += token.body + "\n";

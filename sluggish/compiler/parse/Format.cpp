@@ -17,6 +17,10 @@ std::string format_expression(const Expression* expression) {
         return variable->name;
     }
 
+    if (const auto* member = dynamic_cast<const MemberExpression*>(expression)) {
+        return format_expression(member->object.get()) + "." + member->name;
+    }
+
     if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
 
         std::string output = call->name + "(";
@@ -49,7 +53,15 @@ std::string format_statement(const Statement* statement, const std::string& inde
 
     std::string output;
 
-    if (const auto* function = dynamic_cast<const Function*>(statement)) {
+    if (const auto* definition = dynamic_cast<const StructDefinition*>(statement)) {
+
+        output += indentation + "Struct          " + definition->name + "\n";
+
+        for (const auto& member : definition->members) {
+            output += indentation + "    Member          " + member.type_name + " " + member.name + "\n";
+        }
+
+    } else if (const auto* function = dynamic_cast<const Function*>(statement)) {
 
         output += indentation + "Function        " + function->return_type_name + " " + function->name + "(";
 
@@ -89,7 +101,7 @@ std::string format_statement(const Statement* statement, const std::string& inde
 
     } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement)) {
 
-        output += indentation + "Assignment      " + assignment->name + " = " + format_expression(assignment->value.get()) + "\n";
+        output += indentation + "Assignment      " + format_expression(assignment->target.get()) + " = " + format_expression(assignment->value.get()) + "\n";
 
     } else if (const auto* returned = dynamic_cast<const Return*>(statement)) {
 

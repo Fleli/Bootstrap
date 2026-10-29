@@ -1,20 +1,26 @@
 Sluggish grammar -- design reference, not a parser generator input.
 
-program        -> function program | empty
+program        -> definition program | empty
+definition     -> function | struct
+struct         -> "struct" Symbol "{" members "}"
+members        -> member members | empty
+member         -> Symbol Symbol ";"
 function       -> Symbol Symbol "(" arguments ")" statement
 arguments      -> argument arguments_tail | empty
 arguments_tail -> "," argument arguments_tail | empty
 argument       -> Symbol Symbol
 
 statements     -> statement statements | empty
-statement      -> Symbol statement_tail
+statement      -> declaration | assignment
                 | "{" statements "}"
                 | "return" expression ";"
-statement_tail -> Symbol initializer ";"
-                | "=" expression ";"
+declaration    -> Symbol Symbol initializer ";"
+assignment     -> expression "=" expression ";"
 initializer    -> "=" expression | empty
-expression     -> primary addition_tail
-addition_tail  -> "+" primary addition_tail | empty
+expression     -> postfix addition_tail
+addition_tail  -> "+" postfix addition_tail | empty
+postfix        -> primary member_tail
+member_tail    -> "." Symbol member_tail | empty
 primary        -> Number | Symbol call_tail | "(" expression ")"
 call_tail      -> "(" call_arguments ")" | empty
 call_arguments -> expression call_arguments_tail | empty
@@ -31,11 +37,29 @@ Terminals:
   "("     = TokenType::LeftParen
   ")"     = TokenType::RightParen
   ","     = TokenType::Comma
+  "."     = TokenType::Dot
   "return" = TokenType::Return (reserved keyword)
+  "struct" = TokenType::Struct (reserved keyword)
 
 empty consumes no tokens. The program must consume the entire token sequence.
 
 Examples:
+  struct Point {
+      word_16 x;
+      word_16 y;
+  }
+  struct Line {
+      Point p1;
+      Point p2;
+  }
+  word_16 coordinates() {
+      Point p;
+      p.x = 4;
+      p.y = 5;
+      Line line;
+      line.p1 = p;
+      return line.p1.x + line.p1.y;
+  }
   word_8 zero() { return 0; }
   word_8 example(word_8 a, word_16 b) {
       word_8 x = a;
@@ -50,24 +74,35 @@ Examples:
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
   word_8 caller() { return identity(zero()) + identity(1); }
 
-Only function definitions are allowed at top level. Functions cannot be nested.
+Only function and struct definitions are allowed at top level. Neither can be nested.
+Struct definitions end at "}" without a trailing semicolon. Their members are
+Type name declarations ending in ";", with no initializers, methods or constructors.
+Member types may name other structs; the parser records these names without resolving them.
 A function requires a body: one declaration, assignment, return or block statement.
 Arguments are Type name pairs separated by commas. The list may be empty,
 but a trailing comma, argument initializer or function prototype is not allowed.
 
-LL(1): top level always expects a function. Within a statement, after the first
-Symbol, another Symbol starts a declaration;
-"=" starts an assignment. An initializer is absent when the next token is ";".
+At top level, "struct" starts a struct definition; a Symbol starts a function.
+Within a statement, two initial Symbols start a declaration. Otherwise an expression
+is parsed as the assignment target, followed by "=" and the value expression.
+Checking whether that target is an assignable lvalue belongs to the resolver.
+An initializer is absent when the next token is ";".
 "{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 "return" starts a return statement and requires an expression followed by ";".
-Only the exact name "return" is a keyword; names such as "returnValue" remain Symbols.
-Expressions contain numbers, variable names, function calls and additions, with parentheses for grouping.
+Only the exact names "return" and "struct" are keywords; names such as "returnValue"
+and "structure" remain Symbols.
+Expressions contain numbers, variable names, member access, function calls and additions,
+with parentheses for grouping.
 Within an expression, a name followed by "(" starts a call; otherwise it is a variable reference.
 Call arguments are comma-separated expressions. The list may be empty but cannot have a trailing comma.
 Calls can appear in initializers, assignment RHSs, returns and other expressions, including call arguments.
 Only named functions can be called. Standalone calls such as foo(); are not supported.
+Member access is a postfix operation and binds tighter than addition:
+a.x + b.y groups as (a.x) + (b.y). Chained access a.b.c groups as (a.b).c.
+Members can also be read after a call or grouped expression, such as make_point().x.
+Assignment targets and values share the same expression tree representation.
 Addition is left-associative: a + b + c builds (a + b) + c.
-Each "+" wraps the accumulated expression as its left child and the next primary as its right.
+Each "+" wraps the accumulated expression as its left child and the next postfix expression as its right.
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition to show its tree structure.
@@ -125,3 +160,8 @@ A Call instruction stores the function name, ordered argument slots and a destin
 Each call gets a temporary result slot with the function's return type.
 The lower dump prints Call destination, function(argument slots).
 Calls execute through the SimpleCPU stack calling convention.
+
+Struct definitions and member expressions are currently supported by the lexer and parser only.
+Struct type resolution, lvalue validation, copying and execution will follow in later stages.
+Assignment.name is temporarily retained for the existing resolver, and populated only
+for plain-variable targets. Assignment.target contains the complete parsed expression.
