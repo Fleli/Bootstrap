@@ -46,6 +46,39 @@ void Emulator::run() {
                 registers[a] = registers[b] + registers[c];
                 break;
 
+            case 6: { // push
+
+                const auto value = registers[a];
+                --registers[2];
+                ram.at(registers[2]) = value;
+                break;
+
+            }
+
+            case 7: { // pop
+
+                const auto value = ram.at(registers[2]);
+                ++registers[2];
+                registers[a] = value;
+                break;
+
+            }
+
+            case 8: { // call
+
+                const auto address = ram.at(pc++);
+                --registers[2];
+                ram.at(registers[2]) = pc;
+                pc = address;
+                break;
+
+            }
+
+            case 9: // ret
+                pc = ram.at(registers[2]);
+                ++registers[2];
+                break;
+
             default:
                 throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 

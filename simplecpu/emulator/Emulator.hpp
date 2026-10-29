@@ -16,7 +16,7 @@ public:
 
     explicit Emulator(std::size_t ram_words) : ram(ram_words) {}
 
-    // Load encoded instructions into ram starting at word 0, then run.
+    // Execute encoded instructions from pc. Stack programs must initialize r2.
     void run();
 
 };
