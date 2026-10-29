@@ -18,7 +18,9 @@ const Token& consume(const std::vector<Token>& tokens, std::size_t& i, TokenType
 
 }
 
-std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i) {
+std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i);
+
+std::unique_ptr<Expression> parse_primary(const std::vector<Token>& tokens, std::size_t& i) {
 
     if (i < tokens.size() && tokens[i].type == TokenType::Number) {
 
@@ -36,7 +38,34 @@ std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, s
 
     }
 
+    if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
+
+        ++i;
+        auto expression = parse_expression(tokens, i);
+        consume(tokens, i, TokenType::RightParen, "')'");
+        return expression;
+
+    }
+
     throw std::runtime_error("Expected an expression at token " + std::to_string(i));
+
+}
+
+std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i) {
+
+    auto expression = parse_primary(tokens, i);
+
+    while (i < tokens.size() && tokens[i].type == TokenType::PlusSign) {
+
+        ++i;
+        auto addition = std::make_unique<AdditionExpression>();
+        addition->left = std::move(expression);
+        addition->right = parse_primary(tokens, i);
+        expression = std::move(addition);
+
+    }
+
+    return expression;
 
 }
 
@@ -124,6 +153,10 @@ std::string format_expression(const Expression* expression) {
 
     if (const auto* variable = dynamic_cast<const VariableExpression*>(expression)) {
         return variable->name;
+    }
+
+    if (const auto* addition = dynamic_cast<const AdditionExpression*>(expression)) {
+        return "(" + format_expression(addition->left.get()) + " + " + format_expression(addition->right.get()) + ")";
     }
 
     throw std::runtime_error("Unsupported expression in parser output");

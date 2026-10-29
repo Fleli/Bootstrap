@@ -13,12 +13,15 @@ statement      -> Symbol statement_tail
 statement_tail -> Symbol initializer ";"
                 | "=" expression ";"
 initializer    -> "=" expression | empty
-expression     -> Number | Symbol
+expression     -> primary addition_tail
+addition_tail  -> "+" primary addition_tail | empty
+primary        -> Number | Symbol | "(" expression ")"
 
 Terminals:
   Symbol  = a name (TokenType::Symbol), including type, function and variable names
   Number  = a decimal integer literal (TokenType::Number)
   "="     = TokenType::EqualSign
+  "+"     = TokenType::PlusSign
   ";"     = TokenType::Semicolon
   "{"     = TokenType::LeftBrace
   "}"     = TokenType::RightBrace
@@ -40,6 +43,8 @@ Examples:
   word_8 single(word_8 x) return x;
   word_8 constant() return 5;
   word_8 identity(word_8 x) { return x; }
+  word_8 sum(word_8 a, word_8 b, word_8 c) { return a + b + c; }
+  word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
 
 Only function definitions are allowed at top level. Functions cannot be nested.
 A function requires a body: one declaration, assignment, return or block statement.
@@ -52,8 +57,13 @@ Symbol, another Symbol starts a declaration;
 "{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 "return" starts a return statement and requires an expression followed by ";".
 Only the exact name "return" is a keyword; names such as "returnValue" remain Symbols.
-Expressions currently contain only a number or variable name; operators are not supported yet.
+Expressions contain numbers, variable names and additions, with parentheses for grouping.
+Addition is left-associative: a + b + c builds (a + b) + c.
+Each "+" wraps the accumulated expression as its left child and the next primary as its right.
+Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
+The parse dump parenthesizes each addition to show its tree structure.
+Addition is currently supported only by the lexer and parser; resolution and lowering are pending.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
 The resolver checks that each assigned literal fits its declared type.

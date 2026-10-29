@@ -20,6 +20,13 @@ struct VariableExpression : public Expression {
     std::string name;
 };
 
+struct AdditionExpression : public Expression {
+
+    std::unique_ptr<Expression> left;
+    std::unique_ptr<Expression> right;
+
+};
+
 struct Statement {
     virtual ~Statement() = default;
 };
