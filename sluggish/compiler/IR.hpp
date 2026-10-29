@@ -38,6 +38,15 @@ struct CopyInstruction : public BasicBlockInstruction {
 
 };
 
+// The destination aliases member storage within the source slot.
+struct MemberInstruction : public BasicBlockInstruction {
+
+    std::size_t source_slot;
+    std::size_t member_index;
+    std::size_t destination_slot;
+
+};
+
 struct AddInstruction : public BasicBlockInstruction {
 
     std::size_t left_slot;

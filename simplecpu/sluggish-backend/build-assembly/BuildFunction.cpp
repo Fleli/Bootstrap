@@ -5,6 +5,13 @@
 namespace simplecpu {
 namespace {
 
+struct Slot {
+
+    std::uint32_t offset;
+    const sluggish::Type* type;
+
+};
+
 // r3 holds addresses; r4 and r5 hold values while addresses are calculated.
 void load_frame_address(std::uint32_t offset, std::vector<Instruction>& instructions) {
 
@@ -28,44 +35,42 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
         throw std::runtime_error(function.name + " must end with a return");
     }
 
-    if (function.arguments.size() + 3 > ram_words) {
-        throw std::runtime_error("Too many arguments for SimpleCPU in " + function.name);
-    }
-
     std::uint32_t local_words = 0;
-    const std::uint32_t argument_words = function.arguments.size();
-    std::unordered_map<std::size_t, std::uint32_t> offsets;
+    std::uint32_t argument_words = 0;
+    std::unordered_map<std::size_t, Slot> slots;
 
-    const auto allocate_slot = [&](std::size_t slot, const sluggish::Type* type, std::uint32_t offset) {
+    const auto add_slot = [&](std::size_t slot, const sluggish::Type* type, std::uint32_t offset) {
 
-        if (type == nullptr || type->bit_width() == 0 || type->bit_width() > 32) {
-            throw std::runtime_error("SimpleCPU requires types between 1 and 32 bits in " + function.name);
-        }
-
-        if (!offsets.emplace(slot, offset).second) {
+        if (!slots.emplace(slot, Slot{offset, type}).second) {
             throw std::runtime_error("Duplicate storage slot in " + function.name + ": " + std::to_string(slot));
         }
 
     };
 
-    for (std::size_t i = 0; i < function.arguments.size(); ++i) {
+    // The last argument is closest to FP; each argument starts at its first word.
+    for (std::size_t i = function.arguments.size(); i > 0; --i) {
 
-        const auto& argument = function.arguments[i];
-        allocate_slot(argument.slot, argument.type, argument_words + 1 - i);
+        const auto& argument = function.arguments[i - 1];
+        add_slot(argument.slot, argument.type, argument_words + 2);
+        argument_words += storage_words(argument.type);
+
+        if (argument_words + 3 > ram_words) {
+            throw std::runtime_error("Too many argument words for SimpleCPU in " + function.name);
+        }
 
     }
 
     for (const auto& instruction : block.instructions) {
         if (const auto* allocate = dynamic_cast<const sluggish::AllocateInstruction*>(instruction.get())) {
 
-            ++local_words;
+            local_words += storage_words(allocate->type);
 
             if (local_words + argument_words + 3 > ram_words) {
                 throw std::runtime_error("Frame exceeds SimpleCPU RAM in " + function.name);
             }
 
             // Unsigned subtraction encodes a negative offset for the 32-bit add.
-            allocate_slot(allocate->slot, allocate->type, 0u - local_words);
+            add_slot(allocate->slot, allocate->type, 0u - local_words);
 
         }
     }
@@ -86,45 +91,75 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
             continue;
         }
 
-        if (const auto* store = dynamic_cast<const sluggish::StoreInstruction*>(instruction.get())) {
+        if (const auto* member = dynamic_cast<const sluggish::MemberInstruction*>(instruction.get())) {
 
-            load_frame_address(offsets.at(store->slot), instructions);
+            const auto source = slots.at(member->source_slot);
+            const auto& field = source.type->members.at(member->member_index);
+            auto offset = source.offset;
+
+            for (std::size_t i = 0; i < member->member_index; ++i) {
+                offset += storage_words(source.type->members[i].type);
+            }
+
+            add_slot(member->destination_slot, field.type, offset);
+
+        } else if (const auto* store = dynamic_cast<const sluggish::StoreInstruction*>(instruction.get())) {
+
+            load_frame_address(slots.at(store->slot).offset, instructions);
             instructions.push_back({Opcode::LoadImm, 4, store->value});
             instructions.push_back({Opcode::Store, 3, 4});
 
         } else if (const auto* copy = dynamic_cast<const sluggish::CopyInstruction*>(instruction.get())) {
 
-            load_frame_address(offsets.at(copy->source_slot), instructions);
-            instructions.push_back({Opcode::Load, 4, 3});
-            load_frame_address(offsets.at(copy->destination_slot), instructions);
-            instructions.push_back({Opcode::Store, 3, 4});
+            const auto source = slots.at(copy->source_slot);
+            const auto destination = slots.at(copy->destination_slot);
+            const auto words = storage_words(source.type);
+
+            for (std::uint32_t i = 0; i < words; ++i) {
+
+                load_frame_address(source.offset + i, instructions);
+                instructions.push_back({Opcode::Load, 4, 3});
+                load_frame_address(destination.offset + i, instructions);
+                instructions.push_back({Opcode::Store, 3, 4});
+
+            }
 
         } else if (const auto* add = dynamic_cast<const sluggish::AddInstruction*>(instruction.get())) {
 
-            load_frame_address(offsets.at(add->left_slot), instructions);
+            load_frame_address(slots.at(add->left_slot).offset, instructions);
             instructions.push_back({Opcode::Load, 4, 3});
-            load_frame_address(offsets.at(add->right_slot), instructions);
+            load_frame_address(slots.at(add->right_slot).offset, instructions);
             instructions.push_back({Opcode::Load, 5, 3});
             instructions.push_back({Opcode::Add, 4, 4, 5});
-            load_frame_address(offsets.at(add->destination_slot), instructions);
+            load_frame_address(slots.at(add->destination_slot).offset, instructions);
             instructions.push_back({Opcode::Store, 3, 4});
 
         } else if (const auto* call = dynamic_cast<const sluggish::CallInstruction*>(instruction.get())) {
 
-            load_frame_address(offsets.at(call->destination_slot), instructions);
+            load_frame_address(slots.at(call->destination_slot).offset, instructions);
             instructions.push_back({Opcode::Push, 3});
+
+            std::uint32_t pushed_words = 0;
 
             for (const auto slot : call->argument_slots) {
 
-                load_frame_address(offsets.at(slot), instructions);
-                instructions.push_back({Opcode::Load, 4, 3});
-                instructions.push_back({Opcode::Push, 4});
+                const auto argument = slots.at(slot);
+                const auto words = storage_words(argument.type);
+                pushed_words += words;
+
+                // Reverse each value's words so its first word has the lowest address.
+                for (std::uint32_t i = words; i > 0; --i) {
+
+                    load_frame_address(argument.offset + i - 1, instructions);
+                    instructions.push_back({Opcode::Load, 4, 3});
+                    instructions.push_back({Opcode::Push, 4});
+
+                }
 
             }
 
-            const std::uint32_t argument_count = call->argument_slots.size();
             instructions.push_back({Opcode::Call, function_indices.at(call->function_name)});
-            instructions.push_back({Opcode::LoadImm, 3, argument_count + 1});
+            instructions.push_back({Opcode::LoadImm, 3, pushed_words + 1});
             instructions.push_back({Opcode::Add, 2, 2, 3});
 
         } else if (const auto* returned = dynamic_cast<const sluggish::ReturnInstruction*>(instruction.get())) {
@@ -133,20 +168,33 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
                 throw std::runtime_error("Return must be the final instruction in " + function.name);
             }
 
-            if (returned->source_slot.has_value()) {
+            const auto words = storage_words(function.return_type);
+            load_frame_address(argument_words + 2, instructions);
+            instructions.push_back({Opcode::Load, 5, 3});
 
-                load_frame_address(offsets.at(*returned->source_slot), instructions);
-                instructions.push_back({Opcode::Load, 4, 3});
+            for (std::uint32_t i = 0; i < words; ++i) {
 
-            } else {
+                if (returned->source_slot.has_value()) {
 
-                instructions.push_back({Opcode::LoadImm, 4, returned->value});
+                    load_frame_address(slots.at(*returned->source_slot).offset + i, instructions);
+                    instructions.push_back({Opcode::Load, 4, 3});
+
+                } else {
+
+                    instructions.push_back({Opcode::LoadImm, 4, returned->value});
+
+                }
+
+                instructions.push_back({Opcode::Store, 5, 4});
+
+                if (i + 1 < words) {
+
+                    instructions.push_back({Opcode::LoadImm, 3, 1});
+                    instructions.push_back({Opcode::Add, 5, 5, 3});
+
+                }
 
             }
-
-            load_frame_address(argument_words + 2, instructions);
-            instructions.push_back({Opcode::Load, 3, 3});
-            instructions.push_back({Opcode::Store, 3, 4});
 
             instructions.push_back({Opcode::LoadImm, 3, 0});
             instructions.push_back({Opcode::Add, 2, 1, 3});

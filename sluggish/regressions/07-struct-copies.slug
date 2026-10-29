@@ -1,0 +1,21 @@
+64
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+word_16 main() {
+    Pair first;
+    first.x = 3;
+    first.y = 7;
+
+    Pair second = first;
+    first.x = 11;
+    second.y = 13;
+
+    Pair third;
+    third = second;
+    third.x = 17;
+    return first.x + first.y + second.x + second.y + third.x + third.y;
+}

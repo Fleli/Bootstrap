@@ -1,0 +1,21 @@
+100
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+word_16 select(word_16 head, Pair left, word_16 middle, Pair right, word_16 tail) {
+    return head + left.x + middle + middle + right.y + tail + tail + tail;
+}
+
+word_16 main() {
+    Pair left;
+    left.x = 3;
+    left.y = 7;
+
+    Pair right;
+    right.x = 13;
+    right.y = 17;
+    return select(1, left, 11, right, 19);
+}

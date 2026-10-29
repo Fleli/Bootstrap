@@ -1,0 +1,32 @@
+70
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+struct Box {
+    word_16 prefix;
+    Pair pair;
+    word_16 suffix;
+}
+
+Pair identity(Pair pair) {
+    return pair;
+}
+
+word_16 main() {
+    Box input;
+    input.pair.x = 3;
+    input.pair.y = 7;
+
+    Pair copy = input.pair;
+    Box output;
+    output.prefix = 11;
+    output.suffix = 13;
+    output.pair = identity(input.pair);
+
+    input.pair.x = 17;
+    copy.y = 19;
+    return output.prefix + output.pair.x + output.pair.y + output.suffix + input.pair.x + copy.y;
+}

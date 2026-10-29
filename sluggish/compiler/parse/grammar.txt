@@ -137,8 +137,8 @@ are resolved before any body, allowing forward calls and recursive references.
 Each resolved function keeps its arguments and flattened body separate.
 Each function lowers to its own IR function with typed argument slots and one block.
 SimpleCPU starts in generated _start code, which calls a zero-argument main and halts.
-main writes its result to RAM word 0. Code starts at word 1, with main after _start,
-then the remaining functions under their own entry labels.
+main writes its result starting at RAM word 0. Code starts after the full result,
+with main after _start, then the remaining functions under their own entry labels.
 Each invocation has a stack frame containing its arguments, locals and temporaries.
 The caller passes the address of its result slot as a hidden argument, followed by
 argument values in source order. The callee writes the result through that pointer
@@ -183,4 +183,10 @@ are generated. Struct arguments and returns use the same exact type checks.
 
 The resolver's type table owns struct types. compile() moves that table into the returned
 IRProgram alongside its functions, keeping the IR's type references valid.
-Member lowering and multiword storage/copying in the backend will follow in later stages.
+Member access lowers to a Member instruction containing a source slot, member index
+and destination slot. The destination aliases storage inside the source; it does not
+allocate new storage. Nested member access lowers one member at a time.
+The lower dump prints Member destination, source, member_index.
+The backend determines member offsets from the source slot's type. SimpleCPU stores
+each scalar in one RAM word and struct fields consecutively in declaration order.
+Empty structs occupy one word. Copies, arguments and returns copy all words by value.

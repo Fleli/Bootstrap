@@ -24,7 +24,7 @@ word_16 main() {
     l.p1 = pt_1;
     l.p2 = pt_2;
     
-    word_16 dy = l.p2.y - l.p1.y;
-    return dy;
+    word_16 sumy = l.p2.y + l.p1.y;
+    return sumy;
     
 }

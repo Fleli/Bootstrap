@@ -68,15 +68,16 @@ int main(int argc, char* argv[]) {
 
         if (argc == 2) {
 
+            const auto program_address = assembly.front().address;
             simplecpu::Emulator cpu(simplecpu::ram_words);
 
             for (std::size_t i = 0; i < words.size(); ++i) {
-                cpu.ram.at(simplecpu::program_address + i) = words[i];
+                cpu.ram.at(program_address + i) = words[i];
             }
 
             const auto initial_ram = cpu.ram;
-            cpu.pc = simplecpu::program_address;
-            cpu.stack_floor = simplecpu::program_address + words.size();
+            cpu.pc = program_address;
+            cpu.stack_floor = program_address + words.size();
             cpu.run();
 
             for (std::size_t address = 0; address < cpu.ram.size(); ++address) {
@@ -85,7 +86,13 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            std::cout << "Return value: " << cpu.ram.at(simplecpu::main_result_address) << "\n";
+            std::cout << "Return value:";
+
+            for (auto address = simplecpu::main_result_address; address < program_address; ++address) {
+                std::cout << ' ' << cpu.ram.at(address);
+            }
+
+            std::cout << '\n';
 
         }
 

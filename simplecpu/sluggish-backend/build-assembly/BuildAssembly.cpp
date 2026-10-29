@@ -48,6 +48,8 @@ std::vector<AssemblyFunction> build_assembly(const std::vector<sluggish::IRFunct
 
     }
 
+    const auto program_address = main_result_address + storage_words(entry->return_type);
+
     std::vector<AssemblyFunction> assembly{
         {"_start", program_address, {
             {Opcode::LoadImm, 1, 0},

@@ -1,0 +1,21 @@
+47
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+struct Box {
+    word_16 prefix;
+    Pair pair;
+    word_16 suffix;
+}
+
+word_16 main() {
+    Box box;
+    box.prefix = 1;
+    box.pair.x = 7;
+    box.pair.y = box.pair.x + 2;
+    box.suffix = 30;
+    return box.prefix + box.pair.x + box.pair.y + box.suffix;
+}

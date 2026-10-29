@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-std::uint32_t run_source(const std::string& source) {
+std::string run_source(const std::string& source) {
 
     const auto program = sluggish::compile(source);
     const auto assembly = simplecpu::build_assembly(program.functions);
@@ -34,9 +34,20 @@ std::uint32_t run_source(const std::string& source) {
 
     }
 
-    cpu.pc = simplecpu::program_address;
+    const auto program_address = assembly.front().address;
+    cpu.pc = program_address;
     cpu.run();
-    return cpu.ram.at(simplecpu::main_result_address);
+
+    std::ostringstream result;
+
+    for (auto address = simplecpu::main_result_address; address < program_address; ++address) {
+        if (address != simplecpu::main_result_address) {
+            result << ' ';
+        }
+        result << cpu.ram.at(address);
+    }
+
+    return result.str();
 
 }
 
@@ -84,7 +95,7 @@ int main(int argc, char* argv[]) {
                 std::ostringstream source;
                 source << file.rdbuf();
 
-                const auto actual = std::to_string(run_source(source.str()));
+                const auto actual = run_source(source.str());
 
                 if (actual != expected) {
                     throw std::runtime_error("expected " + expected + ", got " + actual);

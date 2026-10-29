@@ -74,48 +74,55 @@ Calling convention:
   left-to-right before pushing anything for the call. It then pushes the result
   storage address, pushes argument values in source order, and executes call.
   The result storage address is a hidden argument, separate from source parameters.
-  Each argument currently occupies one word, including word_8 and word_16 values.
+  Each scalar occupies one RAM word, including word_8 and word_16 values. Struct
+  members occupy consecutive words in declaration order, recursively. Empty structs
+  occupy one word. There is no packing of several scalar fields into one word.
+  Each argument's words are pushed in reverse order, so its first word ends up at
+  its lowest address. All argument words are copied; arguments are passed by value.
 
   On entry, the callee pushes the caller's FP, sets FP = SP, then reserves its
   entire local and temporary storage by decreasing SP. FP stays fixed throughout
   the body, including while setting up calls to other functions.
 
-  Frame layout for n one-word arguments:
-    FP + n + 2       address of the caller's result storage
-    FP + n + 1 - i   argument i, where 0 <= i < n
+  Frame layout for w total argument words:
+    FP + w + 2       address of the caller's result storage
+    FP + 2 + t       first word of an argument, with t words in arguments after it
     FP + 1           return instruction address
     FP               saved caller FP
     FP - 1, FP - 2, ...  locals and temporaries
 
   With no arguments, the result storage address is at FP + 2.
-  Locals and temporaries currently occupy one word each. IR slots map to offsets
-  within each invocation's frame, so recursive calls have separate storage.
+  Locals and temporaries reserve as many consecutive words as their types require.
+  IR slots map to offsets within each invocation's frame, so recursive calls have
+  separate storage. A Member IR instruction creates a slot at the member's offset
+  inside existing storage; it needs no CPU instruction. Copy expands to a load
+  and store for each word of the value.
 
   To return, the callee writes the result through the hidden result storage pointer,
   sets SP = FP, executes pop r1 to restore the caller's FP, then executes ret.
-  The caller then increases SP by n + 1 to release its arguments and hidden pointer.
+  The caller then increases SP by w + 1 to release its arguments and hidden pointer.
   The result is already in its destination slot; no return-value register is used.
-  Larger return values can use several consecutive words in the caller's storage.
+  Struct returns copy all their words into consecutive words in the caller's storage.
 
 Program startup and result:
   MAIN_RESULT_ADDRESS is RAM word 0. Address 0 is a valid result storage pointer.
-  Currently the result area is one word, since main returns word_8 or word_16.
-  Code is loaded starting at word 1, and execution starts there at generated _start
-  code. The loader, entry PC and assembled labels all use this same code base.
+  The result area has enough words for main's return type. Code is loaded immediately
+  after that area, and execution starts there at generated _start code. Its address
+  is assembly.front().address; the loader, entry PC and labels all use this code base.
   The backend emits _start, then main and the remaining functions.
   The name _start is reserved for this generated entry point.
 
   _start initializes FP = 0 and SP = the RAM size in words. It pushes
   MAIN_RESULT_ADDRESS and calls main, which takes no source arguments. After main
   returns, _start releases the hidden pointer and halts. main uses the same return
-  convention as other functions. The runner and tests read RAM[MAIN_RESULT_ADDRESS].
+  convention as other functions. The runner and tests read every result word starting
+  at MAIN_RESULT_ADDRESS and display them as space-separated values.
 
-  When larger main return types are supported, reserve enough consecutive words
-  starting at word 0 and load code after that region. The result address stays fixed.
   Code, result storage and the downward-growing stack must not overlap.
   The runner and regressions set the emulator's stack floor to the end of code,
   so exhausting the available stack produces an error instead of overwriting code.
 
 The assembler, emulator and backend implement this calling convention.
 Shared memory constants are in sluggish-backend/build-assembly/BuildAssembly.hpp.
-program.hex contains code only; its first word loads at program_address (currently 1).
+program.hex contains code only; its first word loads at _start's address (1 for a
+scalar main result, larger for a multiword result).

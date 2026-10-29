@@ -1,0 +1,19 @@
+38
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+word_16 change(Pair pair) {
+    pair.x = 11;
+    pair.y = 17;
+    return pair.x + pair.y;
+}
+
+word_16 main() {
+    Pair pair;
+    pair.x = 3;
+    pair.y = 7;
+    return change(pair) + pair.x + pair.y;
+}

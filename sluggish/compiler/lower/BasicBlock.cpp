@@ -41,6 +41,10 @@ std::vector<IRFunction> lower(const Resolver& resolver) {
 
                     output += "        Copy            s" + std::to_string(copy->destination_slot) + ", s" + std::to_string(copy->source_slot) + "\n";
 
+                } else if (const auto* member = dynamic_cast<const MemberInstruction*>(instruction.get())) {
+
+                    output += "        Member          s" + std::to_string(member->destination_slot) + ", s" + std::to_string(member->source_slot) + ", " + std::to_string(member->member_index) + "\n";
+
                 } else if (const auto* add = dynamic_cast<const AddInstruction*>(instruction.get())) {
 
                     output += "        Add             s" + std::to_string(add->destination_slot) + ", s" + std::to_string(add->left_slot) + ", s" + std::to_string(add->right_slot) + "\n";

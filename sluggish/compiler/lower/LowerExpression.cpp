@@ -14,6 +14,20 @@ std::size_t lower_expression(const ResolvedExpression* expression,
         return slots.at(variable->declaration);
     }
 
+    if (const auto* member = dynamic_cast<const ResolvedMemberExpression*>(expression)) {
+
+        const auto source_slot = lower_expression(member->object.get(), slots, block, next_slot);
+        const auto destination_slot = next_slot++;
+
+        auto instruction = std::make_unique<MemberInstruction>();
+        instruction->source_slot = source_slot;
+        instruction->member_index = member->member_index;
+        instruction->destination_slot = destination_slot;
+        block.instructions.push_back(std::move(instruction));
+        return destination_slot;
+
+    }
+
     if (const auto* number = dynamic_cast<const ResolvedNumberExpression*>(expression)) {
 
         const auto slot = allocate_slot(number->type, block, next_slot);

@@ -1,0 +1,22 @@
+16
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+Pair make(word_16 x, word_16 y) {
+    Pair pair;
+    pair.x = x;
+    pair.y = y;
+    return pair;
+}
+
+Pair identity(Pair pair) {
+    return pair;
+}
+
+word_16 main() {
+    Pair pair = identity(make(4, 9));
+    return identity(identity(pair)).y + make(7, 11).x;
+}
