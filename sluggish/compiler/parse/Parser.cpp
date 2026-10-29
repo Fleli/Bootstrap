@@ -34,6 +34,23 @@ std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std
 
     }
 
+    if (i < tokens.size() && tokens[i].type == TokenType::Return) {
+
+        ++i;
+
+        if (i == tokens.size() || (tokens[i].type != TokenType::Number && tokens[i].type != TokenType::Symbol)) {
+            throw std::runtime_error("Expected a number or variable name after 'return' at token " + std::to_string(i));
+        }
+
+        auto statement = std::make_unique<Return>();
+        statement->value = tokens[i];
+        ++i;
+
+        consume(tokens, i, TokenType::Semicolon, "';'");
+        return statement;
+
+    }
+
     std::string name = consume(tokens, i, TokenType::Symbol, "a name").body;
     const bool is_declaration = i < tokens.size() && tokens[i].type == TokenType::Symbol;
 
@@ -135,6 +152,10 @@ std::string format_statement(const Statement* statement, const std::string& inde
     } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement)) {
 
         output += indentation + "Assignment      " + assignment->name + " = " + assignment->value.body + "\n";
+
+    } else if (const auto* returned = dynamic_cast<const Return*>(statement)) {
+
+        output += indentation + "Return          " + returned->value.body + "\n";
 
     }
 

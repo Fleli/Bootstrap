@@ -47,6 +47,10 @@ struct Assignment : public Statement {
 
 };
 
+struct Return : public Statement {
+    Token value{}; // Number or Symbol.
+};
+
 // Parses top-level functions only; throws std::runtime_error on invalid syntax.
 // Writes the tree to intermediate/parse.txt, indenting function bodies and blocks.
 std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens);

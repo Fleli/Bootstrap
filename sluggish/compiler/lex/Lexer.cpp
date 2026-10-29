@@ -55,6 +55,11 @@ std::vector<Token> lex(std::string_view source) {
         }
 
         const auto body = source.substr(start, i - start);
+
+        if (type == TokenType::Symbol && body == "return") {
+            type = TokenType::Return;
+        }
+
         tokens.push_back({type, std::string(body)});
     }
 
@@ -72,6 +77,7 @@ std::vector<Token> lex(std::string_view source) {
             case TokenType::LeftParen: output += "LeftParen       "; break;
             case TokenType::RightParen: output += "RightParen      "; break;
             case TokenType::Comma: output += "Comma           "; break;
+            case TokenType::Return: output += "Return          "; break;
         }
 
         output += token.body + "\n";
