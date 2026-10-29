@@ -71,5 +71,7 @@ CPU function translation is not implemented yet.
 Returned literals must fit the enclosing function's return type. Returned variables
 are looked up in the current scope and must have exactly that return type.
 Missing returns and unreachable statements are not checked yet.
-Return lowering is not implemented yet.
+Returns lower to an IR return instruction with either a literal or a source slot.
+Lowering ends the function's block at the first return and emits no later statements.
+The resolver still validates those later statements.
 Function calls are not supported yet.

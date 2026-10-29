@@ -7,4 +7,5 @@ word_16 main() {
 word_8 secondary() {
     word_16 x;
     word_8 y;
+    return x;
 }

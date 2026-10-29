@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,14 @@ struct CopyInstruction : public BasicBlockInstruction {
 
     std::size_t source_slot;
     std::size_t destination_slot;
+
+};
+
+// Ends the block and returns from the function.
+struct ReturnInstruction : public BasicBlockInstruction {
+
+    std::uint16_t value = 0;
+    std::optional<std::size_t> source_slot; // Empty means return the literal value.
 
 };
 

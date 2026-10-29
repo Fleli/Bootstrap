@@ -56,6 +56,18 @@ IRFunction lower_function(const ResolvedFunction& function) {
 
             }
 
+        } else if (const auto* returned = dynamic_cast<const ResolvedReturn*>(statement.get())) {
+
+            auto instruction = std::make_unique<ReturnInstruction>();
+            instruction->value = returned->value;
+
+            if (returned->source != nullptr) {
+                instruction->source_slot = slots.at(returned->source);
+            }
+
+            block.instructions.push_back(std::move(instruction));
+            break;
+
         } else {
 
             throw std::runtime_error("Unsupported statement in lowering");
@@ -106,6 +118,18 @@ std::vector<IRFunction> lower(const Resolver& resolver) {
                 } else if (const auto* copy = dynamic_cast<const CopyInstruction*>(instruction.get())) {
 
                     output += "        Copy            s" + std::to_string(copy->destination_slot) + ", s" + std::to_string(copy->source_slot) + "\n";
+
+                } else if (const auto* returned = dynamic_cast<const ReturnInstruction*>(instruction.get())) {
+
+                    output += "        Return          ";
+
+                    if (returned->source_slot.has_value()) {
+                        output += "s" + std::to_string(*returned->source_slot);
+                    } else {
+                        output += std::to_string(returned->value);
+                    }
+
+                    output += "\n";
 
                 }
 
