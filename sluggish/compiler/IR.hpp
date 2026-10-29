@@ -28,6 +28,13 @@ struct StoreInstruction : public BasicBlockInstruction {
 
 };
 
+struct CopyInstruction : public BasicBlockInstruction {
+
+    std::size_t source_slot;
+    std::size_t destination_slot;
+
+};
+
 struct BasicBlock {
     std::vector<std::unique_ptr<BasicBlockInstruction>> instructions;
 };

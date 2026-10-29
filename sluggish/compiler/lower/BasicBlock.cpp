@@ -26,14 +26,21 @@ BasicBlock lower(const Resolver& resolver) {
 
         } else if (const auto* assignment = dynamic_cast<const ResolvedAssignment*>(statement.get())) {
 
-            if (assignment->source != nullptr) {
-                throw std::runtime_error("Variable copies are not supported in lowering yet");
-            }
+            if (assignment->source == nullptr) {
 
-            auto instruction = std::make_unique<StoreInstruction>();
-            instruction->slot = slots.at(assignment->declaration);
-            instruction->value = assignment->value;
-            block.instructions.push_back(std::move(instruction));
+                auto instruction = std::make_unique<StoreInstruction>();
+                instruction->slot = slots.at(assignment->declaration);
+                instruction->value = assignment->value;
+                block.instructions.push_back(std::move(instruction));
+
+            } else {
+
+                auto instruction = std::make_unique<CopyInstruction>();
+                instruction->source_slot = slots.at(assignment->source);
+                instruction->destination_slot = slots.at(assignment->declaration);
+                block.instructions.push_back(std::move(instruction));
+
+            }
 
         } else {
 
@@ -54,6 +61,10 @@ BasicBlock lower(const Resolver& resolver) {
         } else if (const auto* store = dynamic_cast<const StoreInstruction*>(instruction.get())) {
 
             output += "    Store           s" + std::to_string(store->slot) + ", " + std::to_string(store->value) + "\n";
+
+        } else if (const auto* copy = dynamic_cast<const CopyInstruction*>(instruction.get())) {
+
+            output += "    Copy            s" + std::to_string(copy->destination_slot) + ", s" + std::to_string(copy->source_slot) + "\n";
 
         }
 
