@@ -24,8 +24,13 @@ int main(int argc, char* argv[]) {
 
     try {
 
-        const auto block = sluggish::compile(source.str());
-        const auto assembly = simplecpu::build_assembly(block);
+        const auto functions = sluggish::compile(source.str());
+
+        if (!functions.empty()) {
+            throw std::runtime_error("Function assembly is not implemented yet");
+        }
+
+        const auto assembly = simplecpu::build_assembly(sluggish::BasicBlock{});
         const auto words = simplecpu::assemble(assembly);
 
         std::filesystem::create_directories("simplecpu/intermediate");

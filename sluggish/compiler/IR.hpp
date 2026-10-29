@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sluggish {
@@ -13,7 +14,7 @@ struct BasicBlockInstruction {
     virtual ~BasicBlockInstruction() = default;
 };
 
-// Slots identify local storage. The hardware backend decides its location.
+// Slots identify storage within a function. The hardware backend decides its location.
 struct AllocateInstruction : public BasicBlockInstruction {
 
     std::size_t slot;
@@ -37,6 +38,23 @@ struct CopyInstruction : public BasicBlockInstruction {
 
 struct BasicBlock {
     std::vector<std::unique_ptr<BasicBlockInstruction>> instructions;
+};
+
+// Argument slots hold incoming values supplied by the caller.
+struct IRArgument {
+
+    std::size_t slot;
+    const Type* type = nullptr;
+
+};
+
+struct IRFunction {
+
+    std::string name;
+    const Type* return_type = nullptr;
+    std::vector<IRArgument> arguments;
+    std::vector<BasicBlock> blocks;
+
 };
 
 } // namespace sluggish

@@ -6,7 +6,7 @@
 
 namespace sluggish {
 
-BasicBlock compile(std::string_view source) {
+std::vector<IRFunction> compile(std::string_view source) {
 
     const auto tokens = lex(source);
     const auto parsed = parse(tokens);

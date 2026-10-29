@@ -10,12 +10,24 @@ namespace sluggish {
 
 namespace {
 
-BasicBlock lower_statements(const std::vector<std::unique_ptr<ResolvedStatement>>& statements) {
+IRFunction lower_function(const ResolvedFunction& function) {
+
+    IRFunction lowered;
+    lowered.name = function.name;
+    lowered.return_type = function.return_type;
 
     BasicBlock block;
     std::unordered_map<const ResolvedDeclaration*, std::size_t> slots;
 
-    for (const auto& statement : statements) {
+    for (const auto& argument : function.arguments) {
+
+        const auto slot = slots.size();
+        slots.emplace(argument.get(), slot);
+        lowered.arguments.push_back({slot, argument->type});
+
+    }
+
+    for (const auto& statement : function.statements) {
 
         if (const auto* declaration = dynamic_cast<const ResolvedDeclaration*>(statement.get())) {
 
@@ -52,41 +64,59 @@ BasicBlock lower_statements(const std::vector<std::unique_ptr<ResolvedStatement>
 
     }
 
-    std::string output = "BasicBlock 0:\n";
+    lowered.blocks.push_back(std::move(block));
+    return lowered;
 
-    for (const auto& instruction : block.instructions) {
+}
 
-        if (const auto* allocate = dynamic_cast<const AllocateInstruction*>(instruction.get())) {
+} // namespace
 
-            output += "    Allocate        s" + std::to_string(allocate->slot) + ", " + allocate->type->name() + "\n";
+std::vector<IRFunction> lower(const Resolver& resolver) {
 
-        } else if (const auto* store = dynamic_cast<const StoreInstruction*>(instruction.get())) {
+    std::vector<IRFunction> functions;
 
-            output += "    Store           s" + std::to_string(store->slot) + ", " + std::to_string(store->value) + "\n";
+    for (const auto& function : resolver.functions) {
+        functions.push_back(lower_function(*function));
+    }
 
-        } else if (const auto* copy = dynamic_cast<const CopyInstruction*>(instruction.get())) {
+    std::string output;
 
-            output += "    Copy            s" + std::to_string(copy->destination_slot) + ", s" + std::to_string(copy->source_slot) + "\n";
+    for (const auto& function : functions) {
+
+        output += "Function        " + function.return_type->name() + " " + function.name + "\n";
+
+        for (const auto& argument : function.arguments) {
+            output += "    Argument        s" + std::to_string(argument.slot) + ", " + argument.type->name() + "\n";
+        }
+
+        for (std::size_t i = 0; i < function.blocks.size(); ++i) {
+
+            output += "    BasicBlock " + std::to_string(i) + ":\n";
+
+            for (const auto& instruction : function.blocks[i].instructions) {
+
+                if (const auto* allocate = dynamic_cast<const AllocateInstruction*>(instruction.get())) {
+
+                    output += "        Allocate        s" + std::to_string(allocate->slot) + ", " + allocate->type->name() + "\n";
+
+                } else if (const auto* store = dynamic_cast<const StoreInstruction*>(instruction.get())) {
+
+                    output += "        Store           s" + std::to_string(store->slot) + ", " + std::to_string(store->value) + "\n";
+
+                } else if (const auto* copy = dynamic_cast<const CopyInstruction*>(instruction.get())) {
+
+                    output += "        Copy            s" + std::to_string(copy->destination_slot) + ", s" + std::to_string(copy->source_slot) + "\n";
+
+                }
+
+            }
 
         }
 
     }
 
     emit("lower.txt", output);
-
-    return block;
-
-}
-
-} // namespace
-
-BasicBlock lower(const Resolver& resolver) {
-
-    if (!resolver.functions.empty()) {
-        throw std::runtime_error("Function lowering is not implemented yet");
-    }
-
-    return lower_statements({});
+    return functions;
 
 }
 

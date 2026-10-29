@@ -6,7 +6,7 @@
 
 namespace sluggish {
 
-// Compiles source into typed IR and writes the existing intermediate dumps.
-BasicBlock compile(std::string_view source);
+// Compiles source into IR functions and writes the existing intermediate dumps.
+std::vector<IRFunction> compile(std::string_view source);
 
 } // namespace sluggish
