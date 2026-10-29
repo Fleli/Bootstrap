@@ -1,6 +1,13 @@
 
-word_8 smallInt;
-smallInt = 6;
+word_16 x;
+x = 100;
 
-word_16 bigInt;
-bigInt = 36000;
+word_16 y;
+word_16 z;
+
+{
+    word_16 x = 25;
+    y = x;
+}
+
+z = x;
