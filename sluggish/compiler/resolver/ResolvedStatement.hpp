@@ -20,19 +20,31 @@ struct ResolvedDeclaration : public ResolvedStatement {
 
 };
 
+struct ResolvedExpression {
+
+    const Type* type = nullptr;
+
+    virtual ~ResolvedExpression() = default;
+
+};
+
+struct ResolvedNumberExpression : public ResolvedExpression {
+    std::uint16_t value = 0;
+};
+
+struct ResolvedVariableExpression : public ResolvedExpression {
+    const ResolvedDeclaration* declaration = nullptr;
+};
+
 struct ResolvedAssignment : public ResolvedStatement {
 
-    std::uint16_t value = 0;
+    std::unique_ptr<ResolvedExpression> value;
     const ResolvedDeclaration* declaration = nullptr;
-    const ResolvedDeclaration* source = nullptr; // Null means the RHS is the literal value.
 
 };
 
 struct ResolvedReturn : public ResolvedStatement {
-
-    std::uint16_t value = 0;
-    const ResolvedDeclaration* source = nullptr; // Null means return the literal value.
-
+    std::unique_ptr<ResolvedExpression> value;
 };
 
 struct ResolvedFunction {

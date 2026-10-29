@@ -6,6 +6,44 @@
 
 namespace sluggish {
 
+namespace {
+
+std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type) {
+
+    if (const auto* number = dynamic_cast<const NumberExpression*>(expression)) {
+
+        auto resolved = std::make_unique<ResolvedNumberExpression>();
+        resolved->type = expected_type;
+        resolved->value = expected_type->parse_literal(number->value);
+        return resolved;
+
+    }
+
+    if (const auto* variable = dynamic_cast<const VariableExpression*>(expression)) {
+
+        const auto* declaration = scope.find(variable->name);
+
+        if (declaration == nullptr) {
+            throw std::runtime_error("Undeclared variable: " + variable->name);
+        }
+
+        if (declaration->type != expected_type) {
+            throw std::runtime_error("Expected " + expected_type->name() + ", got " + declaration->type->name());
+        }
+
+        auto resolved = std::make_unique<ResolvedVariableExpression>();
+        resolved->type = declaration->type;
+        resolved->declaration = declaration;
+        return resolved;
+
+    }
+
+    throw std::runtime_error("Unsupported expression in resolver");
+
+}
+
+} // namespace
+
 Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_statements) {
 
     std::unordered_set<std::string> names;
@@ -82,29 +120,7 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
     if (const auto* returned = dynamic_cast<const Return*>(statement)) {
 
         auto resolved = std::make_unique<ResolvedReturn>();
-        const auto* value = returned->value.get();
-
-        if (const auto* number = dynamic_cast<const NumberExpression*>(value)) {
-
-            resolved->value = function.return_type->parse_literal(number->value);
-
-        } else if (const auto* variable = dynamic_cast<const VariableExpression*>(value)) {
-
-            resolved->source = current_scope.find(variable->name);
-
-            if (resolved->source == nullptr) {
-                throw std::runtime_error("Undeclared variable: " + variable->name);
-            }
-
-            if (resolved->source->type != function.return_type) {
-                throw std::runtime_error("Cannot return " + resolved->source->type->name() + " from " + function.return_type->name() + " function " + function.name);
-            }
-
-        } else {
-
-            throw std::runtime_error("Unsupported return value in resolver");
-
-        }
+        resolved->value = resolve_expression(returned->value.get(), current_scope, function.return_type);
 
         function.statements.push_back(std::move(resolved));
         return;
@@ -153,28 +169,7 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
 
     auto resolved = std::make_unique<ResolvedAssignment>();
     resolved->declaration = target;
-
-    if (const auto* number = dynamic_cast<const NumberExpression*>(value)) {
-
-        resolved->value = target->type->parse_literal(number->value);
-
-    } else if (const auto* variable = dynamic_cast<const VariableExpression*>(value)) {
-
-        resolved->source = current_scope.find(variable->name);
-
-        if (resolved->source == nullptr) {
-            throw std::runtime_error("Undeclared variable: " + variable->name);
-        }
-
-        if (resolved->source->type != target->type) {
-            throw std::runtime_error("Cannot assign " + resolved->source->type->name() + " to " + target->type->name());
-        }
-
-    } else {
-
-        throw std::runtime_error("Unsupported assignment value in resolver");
-
-    }
+    resolved->value = resolve_expression(value, current_scope, target->type);
 
     function.statements.push_back(std::move(resolved));
 

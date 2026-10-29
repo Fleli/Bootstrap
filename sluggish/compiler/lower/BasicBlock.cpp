@@ -40,29 +40,45 @@ IRFunction lower_function(const ResolvedFunction& function) {
 
         } else if (const auto* assignment = dynamic_cast<const ResolvedAssignment*>(statement.get())) {
 
-            if (assignment->source == nullptr) {
+            const auto* value = assignment->value.get();
+
+            if (const auto* number = dynamic_cast<const ResolvedNumberExpression*>(value)) {
 
                 auto instruction = std::make_unique<StoreInstruction>();
                 instruction->slot = slots.at(assignment->declaration);
-                instruction->value = assignment->value;
+                instruction->value = number->value;
+                block.instructions.push_back(std::move(instruction));
+
+            } else if (const auto* variable = dynamic_cast<const ResolvedVariableExpression*>(value)) {
+
+                auto instruction = std::make_unique<CopyInstruction>();
+                instruction->source_slot = slots.at(variable->declaration);
+                instruction->destination_slot = slots.at(assignment->declaration);
                 block.instructions.push_back(std::move(instruction));
 
             } else {
 
-                auto instruction = std::make_unique<CopyInstruction>();
-                instruction->source_slot = slots.at(assignment->source);
-                instruction->destination_slot = slots.at(assignment->declaration);
-                block.instructions.push_back(std::move(instruction));
+                throw std::runtime_error("Unsupported assignment expression in lowering");
 
             }
 
         } else if (const auto* returned = dynamic_cast<const ResolvedReturn*>(statement.get())) {
 
+            const auto* value = returned->value.get();
             auto instruction = std::make_unique<ReturnInstruction>();
-            instruction->value = returned->value;
 
-            if (returned->source != nullptr) {
-                instruction->source_slot = slots.at(returned->source);
+            if (const auto* number = dynamic_cast<const ResolvedNumberExpression*>(value)) {
+
+                instruction->value = number->value;
+
+            } else if (const auto* variable = dynamic_cast<const ResolvedVariableExpression*>(value)) {
+
+                instruction->source_slot = slots.at(variable->declaration);
+
+            } else {
+
+                throw std::runtime_error("Unsupported return expression in lowering");
+
             }
 
             block.instructions.push_back(std::move(instruction));
