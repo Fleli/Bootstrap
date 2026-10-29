@@ -65,6 +65,38 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
 
     }
 
+    if (const auto* returned = dynamic_cast<const Return*>(statement)) {
+
+        auto resolved = std::make_unique<ResolvedReturn>();
+        const auto& value = returned->value;
+
+        if (value.type == TokenType::Number) {
+
+            resolved->value = function.return_type->parse_literal(value.body);
+
+        } else if (value.type == TokenType::Symbol) {
+
+            resolved->source = current_scope.find(value.body);
+
+            if (resolved->source == nullptr) {
+                throw std::runtime_error("Undeclared variable: " + value.body);
+            }
+
+            if (resolved->source->type != function.return_type) {
+                throw std::runtime_error("Cannot return " + resolved->source->type->name() + " from " + function.return_type->name() + " function " + function.name);
+            }
+
+        } else {
+
+            throw std::runtime_error("Unsupported return value in resolver");
+
+        }
+
+        function.statements.push_back(std::move(resolved));
+        return;
+
+    }
+
     Token value{};
     const ResolvedDeclaration* target = nullptr;
 

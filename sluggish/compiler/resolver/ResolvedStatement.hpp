@@ -28,6 +28,13 @@ struct ResolvedAssignment : public ResolvedStatement {
 
 };
 
+struct ResolvedReturn : public ResolvedStatement {
+
+    std::uint16_t value = 0;
+    const ResolvedDeclaration* source = nullptr; // Null means return the literal value.
+
+};
+
 struct ResolvedFunction {
 
     std::string name;
