@@ -32,7 +32,7 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
     }
 
     const Expression* value = nullptr;
-    const ResolvedDeclaration* target = nullptr;
+    std::unique_ptr<ResolvedExpression> target;
 
     if (const auto* declaration = dynamic_cast<const Declaration*>(statement)) {
 
@@ -42,25 +42,29 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
 
         auto resolved = std::make_unique<ResolvedDeclaration>();
         resolved->name = declaration->name;
-        resolved->type = resolve_type(declaration->type_name);
+        resolved->type = types.resolve(declaration->type_name);
 
-        target = resolved.get();
+        const auto* binding = resolved.get();
 
-        current_scope.symbols.emplace(target->name, target);
+        current_scope.symbols.emplace(binding->name, binding);
         function.statements.push_back(std::move(resolved));
 
         if (declaration->initializer == nullptr) {
             return;
         }
 
+        auto variable = std::make_unique<ResolvedVariableExpression>();
+        variable->type = binding->type;
+        variable->declaration = binding;
+        target = std::move(variable);
         value = declaration->initializer.get();
 
     } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement)) {
 
-        target = current_scope.find(assignment->name);
+        target = resolve_expression(assignment->target.get(), current_scope);
 
-        if (target == nullptr) {
-            throw std::runtime_error("Undeclared variable: " + assignment->name);
+        if (!target->is_lvalue()) {
+            throw std::runtime_error("Assignment target is not an lvalue");
         }
 
         value = assignment->value.get();
@@ -72,8 +76,8 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
     }
 
     auto resolved = std::make_unique<ResolvedAssignment>();
-    resolved->declaration = target;
-    resolved->value = resolve_expression(value, current_scope, target->type);
+    resolved->target = std::move(target);
+    resolved->value = resolve_expression(value, current_scope, resolved->target->type);
 
     function.statements.push_back(std::move(resolved));
 

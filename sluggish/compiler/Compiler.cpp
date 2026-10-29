@@ -4,15 +4,21 @@
 #include "parse/Parser.hpp"
 #include "resolver/Resolver.hpp"
 
+#include <utility>
+
 namespace sluggish {
 
-std::vector<IRFunction> compile(std::string_view source) {
+IRProgram compile(std::string_view source) {
 
     const auto tokens = lex(source);
     const auto parsed = parse(tokens);
 
-    const Resolver resolver(parsed);
-    return lower(resolver);
+    Resolver resolver(parsed);
+
+    IRProgram program;
+    program.functions = lower(resolver);
+    program.types = std::move(resolver.types);
+    return program;
 
 }
 

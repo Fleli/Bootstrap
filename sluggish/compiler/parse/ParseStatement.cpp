@@ -61,10 +61,6 @@ std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std
     auto statement = std::make_unique<Assignment>();
     statement->target = parse_expression(tokens, i);
 
-    if (const auto* variable = dynamic_cast<const VariableExpression*>(statement->target.get())) {
-        statement->name = variable->name;
-    }
-
     consume(tokens, i, TokenType::EqualSign, "'='");
     statement->value = parse_expression(tokens, i);
     consume(tokens, i, TokenType::Semicolon, "';'");

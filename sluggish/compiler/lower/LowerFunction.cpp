@@ -34,12 +34,13 @@ IRFunction lower_function(const ResolvedFunction& function) {
 
         } else if (const auto* assignment = dynamic_cast<const ResolvedAssignment*>(statement.get())) {
 
+            const auto destination_slot = lower_expression(assignment->target.get(), slots, block, next_slot);
             const auto* value = assignment->value.get();
 
             if (const auto* number = dynamic_cast<const ResolvedNumberExpression*>(value)) {
 
                 auto instruction = std::make_unique<StoreInstruction>();
-                instruction->slot = slots.at(assignment->declaration);
+                instruction->slot = destination_slot;
                 instruction->value = number->value;
                 block.instructions.push_back(std::move(instruction));
 
@@ -47,7 +48,7 @@ IRFunction lower_function(const ResolvedFunction& function) {
 
                 auto instruction = std::make_unique<CopyInstruction>();
                 instruction->source_slot = lower_expression(value, slots, block, next_slot);
-                instruction->destination_slot = slots.at(assignment->declaration);
+                instruction->destination_slot = destination_slot;
                 block.instructions.push_back(std::move(instruction));
 
             }

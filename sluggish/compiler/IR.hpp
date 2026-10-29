@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type-system/Type.hpp"
+#include "type-system/TypeTable.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -80,6 +81,14 @@ struct IRFunction {
     const Type* return_type = nullptr;
     std::vector<IRArgument> arguments;
     std::vector<BasicBlock> blocks;
+
+};
+
+// Keeps struct types alive for the type references in its functions.
+struct IRProgram {
+
+    TypeTable types;
+    std::vector<IRFunction> functions;
 
 };
 

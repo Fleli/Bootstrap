@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
 
     try {
 
-        const auto functions = sluggish::compile(source.str());
-        const auto assembly = simplecpu::build_assembly(functions);
+        const auto program = sluggish::compile(source.str());
+        const auto assembly = simplecpu::build_assembly(program.functions);
 
         std::vector<std::uint32_t> words;
 

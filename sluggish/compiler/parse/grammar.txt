@@ -115,6 +115,7 @@ Initializers, assignments and returns share expression resolution using the expe
 Resolved expressions carry their type and a numeric value, a declaration reference,
 a function reference with argument expressions, or left and right operands for addition.
 Addition operands must have the same type, which is also the result type.
+Only word types support addition for now; struct addition is rejected.
 Literals use the expected type from the assignment, return or call argument context.
 Addition results are not evaluated or checked for overflow during resolution.
 Lowering emits an Add instruction with left, right and destination slots for each addition.
@@ -166,8 +167,20 @@ looks up both built-in words and structs, and each struct keeps its members in d
 Duplicate type names (including built-in names), duplicate members, unknown member types,
 and direct or indirect recursive containment by value are rejected.
 Structs may refer to other structs defined later, and may reuse the same member type.
-For now this table resolves struct definitions only. Function signatures and local variables
-still use built-in types; member expressions, lvalue validation, copying and execution
-will follow in later stages. Struct types are owned by their resolver's type table.
-Assignment.name is temporarily retained for the existing resolver, and populated only
-for plain-variable targets. Assignment.target contains the complete parsed expression.
+Function signatures and local variables use this same type lookup.
+Member access resolves the object's type, then binds to a member index in that type.
+The member's declared type becomes the expression's type. Unknown members and member
+access on a word are rejected. Chained members are resolved from the object outward.
+
+Assignment.target contains the full expression and resolves to a typed lvalue.
+Variables are lvalues; a member is an lvalue only when its object is one.
+Members of function-call results may be read, but cannot be assigned to.
+Numbers, additions and function-call results are not assignment targets.
+The RHS must have exactly the target's type, including for whole-struct copies.
+Different named structs remain distinct types even when their members match.
+Struct initializers may copy existing values; no constructors or default initialization
+are generated. Struct arguments and returns use the same exact type checks.
+
+The resolver's type table owns struct types. compile() moves that table into the returned
+IRProgram alongside its functions, keeping the IR's type references valid.
+Member lowering and multiword storage/copying in the backend will follow in later stages.

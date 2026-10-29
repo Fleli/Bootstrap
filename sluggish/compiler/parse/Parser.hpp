@@ -90,7 +90,6 @@ struct Declaration : public Statement {
 
 struct Assignment : public Statement {
     
-    std::string name; // Temporary compatibility for the resolver; only plain-variable targets.
     std::unique_ptr<Expression> target;
     std::unique_ptr<Expression> value;
 

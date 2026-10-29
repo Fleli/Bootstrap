@@ -9,6 +9,10 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
 
     if (const auto* number = dynamic_cast<const NumberExpression*>(expression)) {
 
+        if (expected_type == nullptr) {
+            throw std::runtime_error("A number requires an expected word type");
+        }
+
         auto resolved = std::make_unique<ResolvedNumberExpression>();
         resolved->type = expected_type;
         resolved->value = expected_type->parse_literal(number->value);
@@ -24,7 +28,7 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
             throw std::runtime_error("Undeclared variable: " + variable->name);
         }
 
-        if (declaration->type != expected_type) {
+        if (expected_type != nullptr && declaration->type != expected_type) {
             throw std::runtime_error("Expected " + expected_type->name() + ", got " + declaration->type->name());
         }
 
@@ -33,6 +37,10 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
         resolved->declaration = declaration;
         return resolved;
 
+    }
+
+    if (const auto* member = dynamic_cast<const MemberExpression*>(expression)) {
+        return resolve_member_expression(*member, scope, expected_type);
     }
 
     if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
@@ -54,7 +62,7 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
                 std::to_string(function->arguments.size()) + ", got " + std::to_string(call->arguments.size()));
         }
 
-        if (function->return_type != expected_type) {
+        if (expected_type != nullptr && function->return_type != expected_type) {
             throw std::runtime_error("Expected " + expected_type->name() + ", got " + function->return_type->name());
         }
 
@@ -74,6 +82,11 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
 
         auto resolved = std::make_unique<ResolvedAdditionExpression>();
         resolved->left = resolve_expression(addition->left.get(), scope, expected_type);
+
+        if (resolved->left->type->is_struct()) {
+            throw std::runtime_error("Addition requires word operands");
+        }
+
         resolved->right = resolve_expression(addition->right.get(), scope, resolved->left->type);
         resolved->type = resolved->left->type;
         return resolved;

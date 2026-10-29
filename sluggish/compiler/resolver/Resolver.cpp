@@ -49,7 +49,7 @@ void Resolver::register_function_signature(const Statement* statement) {
 
     auto resolved = std::make_unique<ResolvedFunction>();
     resolved->name = function->name;
-    resolved->return_type = resolve_type(function->return_type_name);
+    resolved->return_type = types.resolve(function->return_type_name);
 
     Scope function_scope;
 
@@ -61,7 +61,7 @@ void Resolver::register_function_signature(const Statement* statement) {
 
         auto declaration = std::make_unique<ResolvedDeclaration>();
         declaration->name = argument.name;
-        declaration->type = resolve_type(argument.type_name);
+        declaration->type = types.resolve(argument.type_name);
 
         function_scope.symbols.emplace(declaration->name, declaration.get());
         resolved->arguments.push_back(std::move(declaration));

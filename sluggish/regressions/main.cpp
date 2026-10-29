@@ -16,8 +16,8 @@
 
 std::uint32_t run_source(const std::string& source) {
 
-    const auto functions = sluggish::compile(source);
-    const auto assembly = simplecpu::build_assembly(functions);
+    const auto program = sluggish::compile(source);
+    const auto assembly = simplecpu::build_assembly(program.functions);
 
     simplecpu::Emulator cpu(simplecpu::ram_words);
 

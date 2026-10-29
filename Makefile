@@ -13,6 +13,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/parse/Format.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
 	sluggish/compiler/resolver/ResolveExpression.cpp \
+	sluggish/compiler/resolver/ResolveMember.cpp \
 	sluggish/compiler/resolver/ResolveStatement.cpp \
 	sluggish/compiler/resolver/ResolveStruct.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \

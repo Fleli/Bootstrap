@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace sluggish {
@@ -19,6 +21,7 @@ class Type {
 public:
 
     std::vector<TypeMember> members;
+    std::unordered_map<std::string, std::size_t> member_indices;
 
     explicit Type(unsigned int bits);
     explicit Type(std::string name);

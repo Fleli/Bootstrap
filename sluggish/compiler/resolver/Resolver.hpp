@@ -31,7 +31,8 @@ private:
     void resolve_function_body(const Statement* statement);
 
     void resolve(const Statement* statement, Scope& current_scope, ResolvedFunction& function);
-    std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type);
+    std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type = nullptr);
+    std::unique_ptr<ResolvedExpression> resolve_member_expression(const MemberExpression& member, const Scope& scope, const Type* expected_type);
 
 };
 

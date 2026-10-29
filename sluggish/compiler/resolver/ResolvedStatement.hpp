@@ -2,6 +2,7 @@
 
 #include "type-system/Type.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -26,6 +27,7 @@ struct ResolvedExpression {
 
     const Type* type = nullptr;
 
+    virtual bool is_lvalue() const { return false; }
     virtual ~ResolvedExpression() = default;
 
 };
@@ -35,7 +37,20 @@ struct ResolvedNumberExpression : public ResolvedExpression {
 };
 
 struct ResolvedVariableExpression : public ResolvedExpression {
+
     const ResolvedDeclaration* declaration = nullptr;
+
+    bool is_lvalue() const override { return true; }
+
+};
+
+struct ResolvedMemberExpression : public ResolvedExpression {
+
+    std::size_t member_index;
+    std::unique_ptr<ResolvedExpression> object;
+
+    bool is_lvalue() const override { return object->is_lvalue(); }
+
 };
 
 struct ResolvedCallExpression : public ResolvedExpression {
@@ -54,8 +69,8 @@ struct ResolvedAdditionExpression : public ResolvedExpression {
 
 struct ResolvedAssignment : public ResolvedStatement {
 
+    std::unique_ptr<ResolvedExpression> target;
     std::unique_ptr<ResolvedExpression> value;
-    const ResolvedDeclaration* declaration = nullptr;
 
 };
 
