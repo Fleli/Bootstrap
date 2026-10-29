@@ -38,7 +38,9 @@ The target register may also be either source register. add occupies one word.
 The backend passes structured instructions directly to the assembler.
 Assembly text and hexadecimal words are emitted as readable dumps.
 
-The backend currently emits only the zero-argument main function, starting at RAM word 0.
-Variable storage follows its code, with one 32-bit word per slot.
-A return places the result in r0 and halts. The runner prints this value.
-Other functions are not emitted until function calls are supported.
+The backend emits every function under its own label, with zero-argument main first at RAM word 0.
+Each function's entry address is measured in encoded words. Labels occupy no words.
+Storage follows all function code, with one 32-bit word per argument, local or temporary slot.
+Each function has separate storage. Argument slots are reserved but argument passing is not implemented.
+Every return places the result in r0 and halts, so main does not fall through into the other functions.
+The runner prints main's result. Calling functions and returning to a caller remain unimplemented.

@@ -92,7 +92,10 @@ within one function are rejected. Return and argument types are resolved before
 the body. Each resolved function keeps its arguments and flattened body separate.
 Each function lowers to its own IR function with typed argument slots and one block.
 SimpleCPU executes a zero-argument main, placing its return value in r0 and halting.
-Other functions are checked by the compiler but are not emitted by the CPU backend yet.
+The backend emits main first, then every other function under its own entry label.
+All function code precedes storage; each function has separate argument, local and temporary slots.
+Argument slots are reserved, but argument passing is not implemented yet.
+Helper returns also put the result in r0 and halt until calls and returns to callers are implemented.
 Returned literals must fit the enclosing function's return type. Returned variables
 are looked up in the current scope and must have exactly that return type.
 Every function must contain a return. With no branches or loops, a return inside

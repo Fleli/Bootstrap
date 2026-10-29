@@ -3,12 +3,22 @@
 #include "IR.hpp"
 #include "isa/Instruction.hpp"
 
+#include <cstdint>
+#include <string>
 #include <vector>
 
 namespace simplecpu {
 
-// Builds only zero-argument main, starting at RAM word 0 and returning in r0.
-// Data follows the code, with one word per storage slot.
-std::vector<Instruction> build_assembly(const std::vector<sluggish::IRFunction>& functions);
+struct AssemblyFunction {
+
+    std::string name;
+    std::uint32_t address = 0; // Entry address in encoded RAM words.
+    std::vector<Instruction> instructions;
+
+};
+
+// Builds main at RAM word 0, followed by the other functions in source order.
+// Each function returns in r0 and halts. Separate storage follows all code.
+std::vector<AssemblyFunction> build_assembly(const std::vector<sluggish::IRFunction>& functions);
 
 } // namespace simplecpu

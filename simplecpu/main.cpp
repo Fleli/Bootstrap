@@ -3,6 +3,7 @@
 #include "emulator/Emulator.hpp"
 #include "sluggish-backend/build-assembly/BuildAssembly.hpp"
 
+#include <cstdint>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -11,6 +12,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 int main(int argc, char* argv[]) {
 
@@ -26,15 +28,30 @@ int main(int argc, char* argv[]) {
 
         const auto functions = sluggish::compile(source.str());
         const auto assembly = simplecpu::build_assembly(functions);
-        const auto words = simplecpu::assemble(assembly);
+
+        std::vector<std::uint32_t> words;
+
+        for (const auto& function : assembly) {
+
+            const auto function_words = simplecpu::assemble(function.instructions);
+            words.insert(words.end(), function_words.begin(), function_words.end());
+
+        }
 
         std::filesystem::create_directories("simplecpu/intermediate");
         std::ofstream text("simplecpu/intermediate/assembly.txt");
         std::ofstream hex("simplecpu/intermediate/program.hex");
 
-        text << "main:\n";
-        for (const auto& instruction : assembly) {
-            text << "    " << instruction.text() << "\n";
+        for (const auto& function : assembly) {
+
+            text << function.name << ":\n";
+
+            for (const auto& instruction : function.instructions) {
+                text << "    " << instruction.text() << "\n";
+            }
+
+            text << "\n";
+
         }
 
         hex << std::hex << std::uppercase << std::setfill('0');
