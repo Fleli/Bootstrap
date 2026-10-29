@@ -9,6 +9,8 @@ enum class TokenType {
     Symbol,
     EqualSign,
     Semicolon,
+    LeftBrace,
+    RightBrace,
 };
 
 struct SourceReference {};

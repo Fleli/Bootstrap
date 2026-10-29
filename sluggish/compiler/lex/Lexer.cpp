@@ -40,6 +40,10 @@ std::vector<Token> lex(std::string_view source) {
             type = TokenType::EqualSign;
         } else if (c == ';') {
             type = TokenType::Semicolon;
+        } else if (c == '{') {
+            type = TokenType::LeftBrace;
+        } else if (c == '}') {
+            type = TokenType::RightBrace;
         } else {
             throw std::runtime_error("Unexpected character at byte " + std::to_string(start));
         }
@@ -57,6 +61,8 @@ std::vector<Token> lex(std::string_view source) {
             case TokenType::Symbol: output += "Symbol          "; break;
             case TokenType::EqualSign: output += "EqualSign       "; break;
             case TokenType::Semicolon: output += "Semicolon       "; break;
+            case TokenType::LeftBrace: output += "LeftBrace       "; break;
+            case TokenType::RightBrace: output += "RightBrace      "; break;
         }
 
         output += token.body + "\n";
