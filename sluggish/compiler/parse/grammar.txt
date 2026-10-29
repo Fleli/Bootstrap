@@ -35,4 +35,8 @@ Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
 The resolver checks that each assigned literal fits its declared type.
 Variable assignments require declared source and target variables of the same type.
+Duplicate declarations are rejected only within the current scope.
+Variable lookup searches the current scope, then its enclosing scopes.
+An inner declaration can shadow an outer name; names declared inside do not escape.
+Declarations become visible in source order; forward references are not allowed.
 Initialization is not checked yet.

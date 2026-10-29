@@ -18,6 +18,9 @@ public:
     // Initialized declarations become a declaration followed by an assignment.
     explicit Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_statements);
 
+private:
+    void resolve(const std::vector<std::unique_ptr<Statement>>& parsed_statements, Scope& current_scope);
+
 };
 
 } // namespace sluggish

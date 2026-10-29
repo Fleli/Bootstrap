@@ -6,15 +6,28 @@
 namespace sluggish {
 
 Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_statements) {
+    resolve(parsed_statements, scope);
+}
+
+void Resolver::resolve(const std::vector<std::unique_ptr<Statement>>& parsed_statements, Scope& current_scope) {
 
     for (const auto& statement : parsed_statements) {
+
+        if (const auto* block = dynamic_cast<const Block*>(statement.get())) {
+
+            Scope child;
+            child.parent = &current_scope;
+            resolve(block->statements, child);
+            continue;
+
+        }
 
         Token value{};
         const ResolvedDeclaration* target = nullptr;
 
         if (const auto* declaration = dynamic_cast<const Declaration*>(statement.get())) {
 
-            if (scope.find(declaration->name) != nullptr) {
+            if (current_scope.symbols.find(declaration->name) != current_scope.symbols.end()) {
                 throw std::runtime_error("Duplicate declaration: " + declaration->name);
             }
 
@@ -24,7 +37,7 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
 
             target = resolved.get();
 
-            scope.symbols.emplace(target->name, target);
+            current_scope.symbols.emplace(target->name, target);
             statements.push_back(std::move(resolved));
 
             if (declaration->initializer.body.empty()) {
@@ -35,7 +48,7 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
 
         } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement.get())) {
 
-            target = scope.find(assignment->name);
+            target = current_scope.find(assignment->name);
 
             if (target == nullptr) {
                 throw std::runtime_error("Undeclared variable: " + assignment->name);
@@ -58,7 +71,7 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
 
         } else if (value.type == TokenType::Symbol) {
 
-            resolved->source = scope.find(value.body);
+            resolved->source = current_scope.find(value.body);
 
             if (resolved->source == nullptr) {
                 throw std::runtime_error("Undeclared variable: " + value.body);

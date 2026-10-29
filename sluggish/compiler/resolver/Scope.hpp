@@ -10,6 +10,8 @@ namespace sluggish {
 class Scope {
 public:
 
+    const Scope* parent = nullptr;
+
     // Names map to declarations owned by Resolver::statements.
     std::unordered_map<std::string, const ResolvedDeclaration*> symbols;
 
@@ -17,11 +19,15 @@ public:
 
         const auto symbol = symbols.find(name);
 
-        if (symbol == symbols.end()) {
-            return nullptr;
+        if (symbol != symbols.end()) {
+            return symbol->second;
         }
 
-        return symbol->second;
+        if (parent != nullptr) {
+            return parent->find(name);
+        }
+
+        return nullptr;
 
     }
 
