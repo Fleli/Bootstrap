@@ -22,4 +22,6 @@ private:
 
 };
 
+std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type);
+
 } // namespace sluggish
