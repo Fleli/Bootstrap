@@ -9,7 +9,7 @@ namespace simplecpu {
 
 std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
 
-    // Each store_imm occupies three words; the final halt occupies one.
+    // The final halt occupies one word; stores need three and copies need six.
     std::uint64_t next_address = 1;
     const std::uint64_t maximum_address = std::numeric_limits<std::uint32_t>::max();
 
@@ -19,10 +19,14 @@ std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
 
             next_address += 3;
 
-            if (next_address > maximum_address + 1) {
-                throw std::runtime_error("SimpleCPU code exceeds the address space");
-            }
+        } else if (dynamic_cast<const sluggish::CopyInstruction*>(instruction.get())) {
 
+            next_address += 6;
+
+        }
+
+        if (next_address > maximum_address + 1) {
+            throw std::runtime_error("SimpleCPU code exceeds the address space");
         }
 
     }
@@ -57,6 +61,16 @@ std::vector<Instruction> build_assembly(const sluggish::BasicBlock& block) {
             }
 
             assembly.push_back({Opcode::StoreImm, address->second, store->value});
+
+        } else if (const auto* copy = dynamic_cast<const sluggish::CopyInstruction*>(instruction.get())) {
+
+            const auto source = addresses.at(copy->source_slot);
+            const auto destination = addresses.at(copy->destination_slot);
+
+            assembly.push_back({Opcode::LoadImm, 0, source});
+            assembly.push_back({Opcode::Load, 1, 0});
+            assembly.push_back({Opcode::LoadImm, 0, destination});
+            assembly.push_back({Opcode::Store, 0, 1});
 
         } else {
 
