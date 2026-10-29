@@ -9,6 +9,8 @@
 
 namespace sluggish {
 
+struct ResolvedFunction;
+
 struct ResolvedStatement {
     virtual ~ResolvedStatement() = default;
 };
@@ -34,6 +36,13 @@ struct ResolvedNumberExpression : public ResolvedExpression {
 
 struct ResolvedVariableExpression : public ResolvedExpression {
     const ResolvedDeclaration* declaration = nullptr;
+};
+
+struct ResolvedCallExpression : public ResolvedExpression {
+
+    const ResolvedFunction* function = nullptr;
+    std::vector<std::unique_ptr<ResolvedExpression>> arguments;
+
 };
 
 struct ResolvedAdditionExpression : public ResolvedExpression {

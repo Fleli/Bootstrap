@@ -5,7 +5,7 @@
 
 namespace sluggish {
 
-std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type) {
+std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type) {
 
     if (const auto* number = dynamic_cast<const NumberExpression*>(expression)) {
 
@@ -31,6 +31,41 @@ std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* express
         auto resolved = std::make_unique<ResolvedVariableExpression>();
         resolved->type = declaration->type;
         resolved->declaration = declaration;
+        return resolved;
+
+    }
+
+    if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
+
+        if (scope.find(call->name) != nullptr) {
+            throw std::runtime_error("Not callable: " + call->name);
+        }
+
+        const auto symbol = function_symbols.find(call->name);
+
+        if (symbol == function_symbols.end()) {
+            throw std::runtime_error("Unknown function: " + call->name);
+        }
+
+        const auto* function = symbol->second;
+
+        if (call->arguments.size() != function->arguments.size()) {
+            throw std::runtime_error("Wrong argument count for " + call->name + ": expected " +
+                std::to_string(function->arguments.size()) + ", got " + std::to_string(call->arguments.size()));
+        }
+
+        if (function->return_type != expected_type) {
+            throw std::runtime_error("Expected " + expected_type->name() + ", got " + function->return_type->name());
+        }
+
+        auto resolved = std::make_unique<ResolvedCallExpression>();
+        resolved->type = function->return_type;
+        resolved->function = function;
+
+        for (std::size_t i = 0; i < call->arguments.size(); ++i) {
+            resolved->arguments.push_back(resolve_expression(call->arguments[i].get(), scope, function->arguments[i]->type));
+        }
+
         return resolved;
 
     }

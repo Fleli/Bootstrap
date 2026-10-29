@@ -78,9 +78,9 @@ The resolver checks that each assigned literal fits its declared type.
 Variable assignments require declared source and target variables of the same type.
 Initializers, assignments and returns share expression resolution using the expected type.
 Resolved expressions carry their type and a numeric value, a declaration reference,
-or left and right operands for addition.
+a function reference with argument expressions, or left and right operands for addition.
 Addition operands must have the same type, which is also the result type.
-Literals use the expected type from the assignment or return context.
+Literals use the expected type from the assignment, return or call argument context.
 Addition results are not evaluated or checked for overflow during resolution.
 Lowering emits an Add instruction with left, right and destination slots for each addition.
 Literal operands are stored in temporary slots; variable operands use their existing slots.
@@ -91,13 +91,14 @@ Overflow handling for the narrower word_8 and word_16 types is deferred.
 Duplicate declarations are rejected only within the current scope.
 Variable lookup searches the current scope, then its enclosing scopes.
 An inner declaration can shadow an outer name; names declared inside do not escape.
-Declarations become visible in source order; forward references are not allowed.
+Variable declarations become visible in source order; forward references to variables are not allowed.
 Initialization is not checked yet.
 
 A function introduces a scope containing its arguments. A block body introduces
 an additional nested scope. Duplicate function names and duplicate argument names
-within one function are rejected. Return and argument types are resolved before
-the body. Each resolved function keeps its arguments and flattened body separate.
+within one function are rejected. All function names, return types and argument types
+are resolved before any body, allowing forward calls and recursive references.
+Each resolved function keeps its arguments and flattened body separate.
 Each function lowers to its own IR function with typed argument slots and one block.
 SimpleCPU executes a zero-argument main, placing its return value in r0 and halting.
 The backend emits main first, then every other function under its own entry label.
@@ -111,5 +112,8 @@ a nested block is sufficient. Unreachable statements are not diagnosed.
 Returns lower to an IR return instruction with either a literal or a source slot.
 Lowering ends the function's block at the first return and emits no later statements.
 The resolver still validates those later statements.
-Function calls are currently parsed only. Function lookup, argument checks, lowering and execution
-of calls are not implemented yet.
+Function calls bind to a resolved function and require exactly its declared argument count.
+Arguments are resolved in the caller's scope using each parameter's expected type.
+The call's return type must match its surrounding expected type; no implicit conversions are allowed.
+A local variable or argument shadows a function of the same name and cannot be called.
+Lowering and execution of calls are not implemented yet.
