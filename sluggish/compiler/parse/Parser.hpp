@@ -16,14 +16,14 @@ struct Declaration : public Statement {
     
     std::string name;
     std::string type_name;
-    std::string initializer; // Number text; empty when absent.
+    Token initializer{}; // Number or Symbol; empty body when absent.
     
 };
 
 struct Assignment : public Statement {
     
     std::string name;
-    std::string value; // Number text.
+    Token value{}; // Number or Symbol.
 
 };
 

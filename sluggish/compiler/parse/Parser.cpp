@@ -32,17 +32,18 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
             
         }
 
-        std::string value;
+        Token value{};
         
         if (i < tokens.size() && tokens[i].type == TokenType::EqualSign) {
             
             ++i;
             
-            if (i == tokens.size() || tokens[i].type != TokenType::Number) {
-                throw std::runtime_error("Expected a number at token " + std::to_string(i));
+            // Will generalize to expressions later.
+            if (i == tokens.size() || (tokens[i].type != TokenType::Number && tokens[i].type != TokenType::Symbol)) {
+                throw std::runtime_error("Expected a number or variable name at token " + std::to_string(i));
             }
             
-            value = tokens[i].body;
+            value = tokens[i];
             ++i;
             
         } else if (!is_declaration) {
@@ -85,13 +86,13 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
 
             output += "Declaration     " + declaration->type_name + " " + declaration->name;
 
-            if (!declaration->initializer.empty()) {
-                output += " = " + declaration->initializer;
+            if (!declaration->initializer.body.empty()) {
+                output += " = " + declaration->initializer.body;
             }
 
         } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement.get())) {
 
-            output += "Assignment      " + assignment->name + " = " + assignment->value;
+            output += "Assignment      " + assignment->name + " = " + assignment->value.body;
 
         }
 

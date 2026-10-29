@@ -24,10 +24,14 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
             scope.symbols.emplace(target->name, target);
             statements.push_back(std::move(resolved));
 
-            if (!declaration->initializer.empty()) {
+            if (!declaration->initializer.body.empty()) {
+
+                if (declaration->initializer.type != TokenType::Number) {
+                    throw std::runtime_error("Variable values are not supported in the resolver yet");
+                }
 
                 auto initializer = std::make_unique<ResolvedAssignment>();
-                initializer->value = target->type->parse_literal(declaration->initializer);
+                initializer->value = target->type->parse_literal(declaration->initializer.body);
                 initializer->declaration = target;
                 statements.push_back(std::move(initializer));
 
@@ -41,8 +45,12 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
                 throw std::runtime_error("Undeclared variable: " + assignment->name);
             }
 
+            if (assignment->value.type != TokenType::Number) {
+                throw std::runtime_error("Variable values are not supported in the resolver yet");
+            }
+
             auto resolved = std::make_unique<ResolvedAssignment>();
-            resolved->value = target->type->parse_literal(assignment->value);
+            resolved->value = target->type->parse_literal(assignment->value.body);
             resolved->declaration = target;
             statements.push_back(std::move(resolved));
 

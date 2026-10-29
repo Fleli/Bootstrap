@@ -3,8 +3,9 @@ Sluggish grammar -- design reference, not a parser generator input.
 program        -> statement program | empty
 statement      -> Symbol statement_tail
 statement_tail -> Symbol initializer ";"
-                | "=" Number ";"
-initializer    -> "=" Number | empty
+                | "=" value ";"
+initializer    -> "=" value | empty
+value          -> Number | Symbol
 
 Terminals:
   Symbol  = a name (TokenType::Symbol), including type and variable names
@@ -17,10 +18,13 @@ empty consumes no tokens. The program must consume the entire token sequence.
 Examples:
   word_8 x;       -- declaration
   word_8 x = 5;   -- declaration with initializer
+  word_8 y = x;   -- declaration with variable initializer
   x = 5;          -- assignment
+  x = y;          -- assignment from a variable
 
 LL(1): after the first Symbol, another Symbol starts a declaration;
 "=" starts an assignment. An initializer is absent when the next token is ";".
+Each value is a single number or variable name; operators are not supported yet.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
 The resolver checks that each assigned literal fits its declared type.
