@@ -26,6 +26,10 @@ BasicBlock lower(const Resolver& resolver) {
 
         } else if (const auto* assignment = dynamic_cast<const ResolvedAssignment*>(statement.get())) {
 
+            if (assignment->source != nullptr) {
+                throw std::runtime_error("Variable copies are not supported in lowering yet");
+            }
+
             auto instruction = std::make_unique<StoreInstruction>();
             instruction->slot = slots.at(assignment->declaration);
             instruction->value = assignment->value;

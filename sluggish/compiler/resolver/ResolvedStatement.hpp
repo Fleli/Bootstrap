@@ -20,8 +20,9 @@ struct ResolvedDeclaration : public ResolvedStatement {
 
 struct ResolvedAssignment : public ResolvedStatement {
 
-    std::uint16_t value;
+    std::uint16_t value = 0;
     const ResolvedDeclaration* declaration = nullptr;
+    const ResolvedDeclaration* source = nullptr; // Null means the RHS is the literal value.
 
 };
 
