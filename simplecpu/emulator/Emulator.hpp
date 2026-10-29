@@ -11,6 +11,7 @@ public:
 
     bool halted = false;
     std::uint32_t pc = 0;
+    std::uint32_t stack_floor = 0; // End of loaded code; zero disables stack bounds checks.
     std::uint32_t registers[256]{}; // Register indices are 8 bits.
     std::vector<std::uint32_t> ram;
 

@@ -5,9 +5,14 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace simplecpu {
+
+inline constexpr std::uint32_t main_result_address = 0;
+inline constexpr std::uint32_t program_address = 1;
+inline constexpr std::uint32_t ram_words = 1024;
 
 struct AssemblyFunction {
 
@@ -17,8 +22,12 @@ struct AssemblyFunction {
 
 };
 
-// Builds main at RAM word 0, followed by the other functions in source order.
-// Each function returns in r0 and halts. Separate storage follows all code.
+// Builds _start, main and the remaining functions. Calls use stack frames;
+// _start supplies main_result_address as main's return storage, then halts.
 std::vector<AssemblyFunction> build_assembly(const std::vector<sluggish::IRFunction>& functions);
+
+// Call operands initially hold function indices; build_assembly resolves addresses.
+AssemblyFunction build_function(const sluggish::IRFunction& function,
+    const std::unordered_map<std::string, std::uint32_t>& function_indices);
 
 } // namespace simplecpu

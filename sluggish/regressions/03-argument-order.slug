@@ -1,0 +1,13 @@
+373
+
+word_16 first(word_16 a, word_8 b) {
+    return a;
+}
+
+word_16 main() {
+    return first(73, 9) + last(2, 300);
+}
+
+word_16 last(word_8 a, word_16 b) {
+    return b;
+}

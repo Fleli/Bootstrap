@@ -100,11 +100,15 @@ within one function are rejected. All function names, return types and argument 
 are resolved before any body, allowing forward calls and recursive references.
 Each resolved function keeps its arguments and flattened body separate.
 Each function lowers to its own IR function with typed argument slots and one block.
-SimpleCPU executes a zero-argument main, placing its return value in r0 and halting.
-The backend emits main first, then every other function under its own entry label.
-All function code precedes storage; each function has separate argument, local and temporary slots.
-Argument slots are reserved, but argument passing is not implemented yet.
-Helper returns also put the result in r0 and halt until calls and returns to callers are implemented.
+SimpleCPU starts in generated _start code, which calls a zero-argument main and halts.
+main writes its result to RAM word 0. Code starts at word 1, with main after _start,
+then the remaining functions under their own entry labels.
+Each invocation has a stack frame containing its arguments, locals and temporaries.
+The caller passes the address of its result slot as a hidden argument, followed by
+argument values in source order. The callee writes the result through that pointer
+and returns to the caller, which releases the arguments and hidden pointer.
+The stack grows downward, with r1 as frame pointer and r2 as stack pointer.
+The SimpleCPU ISA reference defines the exact frame layout and calling convention.
 Returned literals must fit the enclosing function's return type. Returned variables
 are looked up in the current scope and must have exactly that return type.
 Every function must contain a return. With no branches or loops, a return inside
@@ -120,4 +124,4 @@ Call arguments are lowered left-to-right into slots in the caller's function.
 A Call instruction stores the function name, ordered argument slots and a destination slot.
 Each call gets a temporary result slot with the function's return type.
 The lower dump prints Call destination, function(argument slots).
-Execution of calls is not implemented yet.
+Calls execute through the SimpleCPU stack calling convention.

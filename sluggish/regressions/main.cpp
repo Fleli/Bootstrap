@@ -19,21 +19,24 @@ std::uint32_t run_source(const std::string& source) {
     const auto functions = sluggish::compile(source);
     const auto assembly = simplecpu::build_assembly(functions);
 
-    std::size_t address = 0;
-    simplecpu::Emulator cpu(1024);
+    simplecpu::Emulator cpu(simplecpu::ram_words);
 
     for (const auto& function : assembly) {
 
+        std::size_t address = function.address;
         const auto words = simplecpu::assemble(function.instructions);
 
         for (auto word : words) {
             cpu.ram.at(address++) = word;
         }
 
+        cpu.stack_floor = address;
+
     }
 
+    cpu.pc = simplecpu::program_address;
     cpu.run();
-    return cpu.registers[0];
+    return cpu.ram.at(simplecpu::main_result_address);
 
 }
 

@@ -33,6 +33,7 @@ COMPILER_HEADERS = sluggish/compiler/Compiler.hpp \
 CPU_SOURCES = simplecpu/main.cpp \
 	simplecpu/isa/Instruction.cpp \
 	simplecpu/sluggish-backend/build-assembly/BuildAssembly.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildFunction.cpp \
 	simplecpu/assembler/Assembler.cpp \
 	simplecpu/emulator/Emulator.cpp
 

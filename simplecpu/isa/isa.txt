@@ -103,6 +103,7 @@ Program startup and result:
   Code is loaded starting at word 1, and execution starts there at generated _start
   code. The loader, entry PC and assembled labels all use this same code base.
   The backend emits _start, then main and the remaining functions.
+  The name _start is reserved for this generated entry point.
 
   _start initializes FP = 0 and SP = the RAM size in words. It pushes
   MAIN_RESULT_ADDRESS and calls main, which takes no source arguments. After main
@@ -112,7 +113,9 @@ Program startup and result:
   When larger main return types are supported, reserve enough consecutive words
   starting at word 0 and load code after that region. The result address stays fixed.
   Code, result storage and the downward-growing stack must not overlap.
+  The runner and regressions set the emulator's stack floor to the end of code,
+  so exhausting the available stack produces an error instead of overwriting code.
 
-The stack instructions and calling convention above are the target contract.
-The assembler and emulator support the stack instructions.
-Backend support for the calling convention will be added in the next stage.
+The assembler, emulator and backend implement this calling convention.
+Shared memory constants are in sluggish-backend/build-assembly/BuildAssembly.hpp.
+program.hex contains code only; its first word loads at program_address (currently 1).

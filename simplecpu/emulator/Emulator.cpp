@@ -9,11 +9,16 @@ void Emulator::run() {
 
     while (!halted) {
 
+        const auto previous_stack_pointer = registers[2];
         const auto instruction = ram.at(pc++);
         const auto opcode = instruction >> 24;
         const auto a = (instruction >> 16) & 0xff;
         const auto b = (instruction >> 8) & 0xff;
         const auto c = instruction & 0xff;
+
+        if (stack_floor != 0 && (opcode == 6 || opcode == 8) && registers[2] <= stack_floor) {
+            throw std::runtime_error("Stack overlaps program code");
+        }
 
         switch (opcode) {
 
@@ -82,6 +87,11 @@ void Emulator::run() {
             default:
                 throw std::runtime_error("Unknown opcode: " + std::to_string(opcode));
 
+        }
+
+        if (stack_floor != 0 && registers[2] != previous_stack_pointer &&
+            (registers[2] < stack_floor || registers[2] > ram.size())) {
+            throw std::runtime_error("Stack exceeds available RAM");
         }
 
     }

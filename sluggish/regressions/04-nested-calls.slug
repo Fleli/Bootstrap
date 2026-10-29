@@ -1,0 +1,22 @@
+84
+
+word_16 main() {
+    word_16 x = 4;
+    word_16 result = combine(double(x), double(double(3)));
+    x = double(result);
+    return identity(x) + result;
+}
+
+word_16 double(word_16 input) {
+    return input + input;
+}
+
+word_16 combine(word_16 left, word_16 right) {
+    word_16 saved = left;
+    word_16 nested = identity(right);
+    return saved + nested + left;
+}
+
+word_16 identity(word_16 input) {
+    return input;
+}

@@ -1,0 +1,9 @@
+42
+
+word_8 main() {
+    return answer();
+}
+
+word_8 answer() {
+    return 42;
+}

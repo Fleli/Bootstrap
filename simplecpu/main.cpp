@@ -68,13 +68,15 @@ int main(int argc, char* argv[]) {
 
         if (argc == 2) {
 
-            simplecpu::Emulator cpu(1024);
+            simplecpu::Emulator cpu(simplecpu::ram_words);
 
             for (std::size_t i = 0; i < words.size(); ++i) {
-                cpu.ram.at(i) = words[i];
+                cpu.ram.at(simplecpu::program_address + i) = words[i];
             }
 
             const auto initial_ram = cpu.ram;
+            cpu.pc = simplecpu::program_address;
+            cpu.stack_floor = simplecpu::program_address + words.size();
             cpu.run();
 
             for (std::size_t address = 0; address < cpu.ram.size(); ++address) {
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            std::cout << "Return value: " << cpu.registers[0] << "\n";
+            std::cout << "Return value: " << cpu.ram.at(simplecpu::main_result_address) << "\n";
 
         }
 
