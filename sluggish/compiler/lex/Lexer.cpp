@@ -38,6 +38,8 @@ std::vector<Token> lex(std::string_view source) {
             type = TokenType::Number;
         } else if (c == '=') {
             type = TokenType::EqualSign;
+        } else if (c == '+') {
+            type = TokenType::PlusSign;
         } else if (c == ';') {
             type = TokenType::Semicolon;
         } else if (c == '{') {
@@ -71,6 +73,7 @@ std::vector<Token> lex(std::string_view source) {
             case TokenType::Number: output += "Number          "; break;
             case TokenType::Symbol: output += "Symbol          "; break;
             case TokenType::EqualSign: output += "EqualSign       "; break;
+            case TokenType::PlusSign: output += "PlusSign        "; break;
             case TokenType::Semicolon: output += "Semicolon       "; break;
             case TokenType::LeftBrace: output += "LeftBrace       "; break;
             case TokenType::RightBrace: output += "RightBrace      "; break;

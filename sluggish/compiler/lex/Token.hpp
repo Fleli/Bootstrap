@@ -8,6 +8,7 @@ enum class TokenType {
     Number,
     Symbol,
     EqualSign,
+    PlusSign,
     Semicolon,
     LeftBrace,
     RightBrace,
