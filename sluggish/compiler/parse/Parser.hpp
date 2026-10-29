@@ -8,6 +8,18 @@
 
 namespace sluggish {
 
+struct Expression {
+    virtual ~Expression() = default;
+};
+
+struct NumberExpression : public Expression {
+    std::string value;
+};
+
+struct VariableExpression : public Expression {
+    std::string name;
+};
+
 struct Statement {
     virtual ~Statement() = default;
 };
@@ -36,19 +48,19 @@ struct Declaration : public Statement {
     
     std::string name;
     std::string type_name;
-    Token initializer{}; // Number or Symbol; empty body when absent.
+    std::unique_ptr<Expression> initializer; // Null when absent.
     
 };
 
 struct Assignment : public Statement {
     
     std::string name;
-    Token value{}; // Number or Symbol.
+    std::unique_ptr<Expression> value;
 
 };
 
 struct Return : public Statement {
-    Token value{}; // Number or Symbol.
+    std::unique_ptr<Expression> value;
 };
 
 // Parses top-level functions only; throws std::runtime_error on invalid syntax.

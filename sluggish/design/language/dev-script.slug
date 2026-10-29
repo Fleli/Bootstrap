@@ -1,6 +1,6 @@
 
 word_16 main() {
-    word_16 x = 2;
+    word_16 x = 3;
     word_16 y = x;
     return y;
 }

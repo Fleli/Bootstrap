@@ -82,18 +82,18 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
     if (const auto* returned = dynamic_cast<const Return*>(statement)) {
 
         auto resolved = std::make_unique<ResolvedReturn>();
-        const auto& value = returned->value;
+        const auto* value = returned->value.get();
 
-        if (value.type == TokenType::Number) {
+        if (const auto* number = dynamic_cast<const NumberExpression*>(value)) {
 
-            resolved->value = function.return_type->parse_literal(value.body);
+            resolved->value = function.return_type->parse_literal(number->value);
 
-        } else if (value.type == TokenType::Symbol) {
+        } else if (const auto* variable = dynamic_cast<const VariableExpression*>(value)) {
 
-            resolved->source = current_scope.find(value.body);
+            resolved->source = current_scope.find(variable->name);
 
             if (resolved->source == nullptr) {
-                throw std::runtime_error("Undeclared variable: " + value.body);
+                throw std::runtime_error("Undeclared variable: " + variable->name);
             }
 
             if (resolved->source->type != function.return_type) {
@@ -111,7 +111,7 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
 
     }
 
-    Token value{};
+    const Expression* value = nullptr;
     const ResolvedDeclaration* target = nullptr;
 
     if (const auto* declaration = dynamic_cast<const Declaration*>(statement)) {
@@ -129,11 +129,11 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
         current_scope.symbols.emplace(target->name, target);
         function.statements.push_back(std::move(resolved));
 
-        if (declaration->initializer.body.empty()) {
+        if (declaration->initializer == nullptr) {
             return;
         }
 
-        value = declaration->initializer;
+        value = declaration->initializer.get();
 
     } else if (const auto* assignment = dynamic_cast<const Assignment*>(statement)) {
 
@@ -143,7 +143,7 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
             throw std::runtime_error("Undeclared variable: " + assignment->name);
         }
 
-        value = assignment->value;
+        value = assignment->value.get();
 
     } else {
 
@@ -154,16 +154,16 @@ void Resolver::resolve(const Statement* statement, Scope& current_scope, Resolve
     auto resolved = std::make_unique<ResolvedAssignment>();
     resolved->declaration = target;
 
-    if (value.type == TokenType::Number) {
+    if (const auto* number = dynamic_cast<const NumberExpression*>(value)) {
 
-        resolved->value = target->type->parse_literal(value.body);
+        resolved->value = target->type->parse_literal(number->value);
 
-    } else if (value.type == TokenType::Symbol) {
+    } else if (const auto* variable = dynamic_cast<const VariableExpression*>(value)) {
 
-        resolved->source = current_scope.find(value.body);
+        resolved->source = current_scope.find(variable->name);
 
         if (resolved->source == nullptr) {
-            throw std::runtime_error("Undeclared variable: " + value.body);
+            throw std::runtime_error("Undeclared variable: " + variable->name);
         }
 
         if (resolved->source->type != target->type) {
