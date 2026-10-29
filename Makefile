@@ -41,7 +41,7 @@ CPU_HEADERS = simplecpu/isa/Instruction.hpp \
 	simplecpu/assembler/Assembler.hpp \
 	simplecpu/emulator/Emulator.hpp
 
-.PHONY: assemble assembly run
+.PHONY: assemble assembly run regressions
 
 assemble: simplecpu/build/simplecpu
 	./simplecpu/build/simplecpu < sluggish/design/language/dev-script.slug
@@ -51,6 +51,9 @@ assembly: assemble
 run: simplecpu/build/simplecpu
 	./simplecpu/build/simplecpu --run < sluggish/design/language/dev-script.slug
 
+regressions: sluggish/build/regressions
+	./sluggish/build/regressions
+
 simplecpu/build/simplecpu: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(CPU_SOURCES) $(CPU_HEADERS) Makefile
 	mkdir -p simplecpu/build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) $(CPU_SOURCES) -o $@
@@ -58,3 +61,7 @@ simplecpu/build/simplecpu: $(COMPILER_SOURCES) $(COMPILER_HEADERS) $(CPU_SOURCES
 sluggish/build/sluggish: sluggish/compiler/main.cpp $(COMPILER_SOURCES) $(COMPILER_HEADERS) Makefile
 	mkdir -p sluggish/build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) sluggish/compiler/main.cpp -o $@
+
+sluggish/build/regressions: sluggish/regressions/main.cpp $(COMPILER_SOURCES) $(filter-out simplecpu/main.cpp,$(CPU_SOURCES)) $(COMPILER_HEADERS) $(CPU_HEADERS) Makefile
+	mkdir -p sluggish/build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMPILER_SOURCES) $(filter-out simplecpu/main.cpp,$(CPU_SOURCES)) sluggish/regressions/main.cpp -o $@

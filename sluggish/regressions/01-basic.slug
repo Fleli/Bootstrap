@@ -1,0 +1,8 @@
+6
+
+word_16 main() {
+    word_16 x = 3;
+    word_16 y = 2;
+    word_16 z = x + y + 1;
+    return z;
+}
