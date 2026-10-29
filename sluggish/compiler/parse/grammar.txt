@@ -2,6 +2,7 @@ Sluggish grammar -- design reference, not a parser generator input.
 
 program        -> statement program | empty
 statement      -> Symbol statement_tail
+                | "{" program "}"
 statement_tail -> Symbol initializer ";"
                 | "=" value ";"
 initializer    -> "=" value | empty
@@ -12,6 +13,8 @@ Terminals:
   Number  = a decimal integer literal (TokenType::Number)
   "="     = TokenType::EqualSign
   ";"     = TokenType::Semicolon
+  "{"     = TokenType::LeftBrace
+  "}"     = TokenType::RightBrace
 
 empty consumes no tokens. The program must consume the entire token sequence.
 
@@ -21,9 +24,12 @@ Examples:
   word_8 y = x;   -- declaration with variable initializer
   x = 5;          -- assignment
   x = y;          -- assignment from a variable
+  { word_8 x; }   -- nested scope
+  {}              -- empty scope
 
 LL(1): after the first Symbol, another Symbol starts a declaration;
 "=" starts an assignment. An initializer is absent when the next token is ";".
+"{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 Each value is a single number or variable name; operators are not supported yet.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
