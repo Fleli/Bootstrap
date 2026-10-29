@@ -15,7 +15,10 @@ statement_tail -> Symbol initializer ";"
 initializer    -> "=" expression | empty
 expression     -> primary addition_tail
 addition_tail  -> "+" primary addition_tail | empty
-primary        -> Number | Symbol | "(" expression ")"
+primary        -> Number | Symbol call_tail | "(" expression ")"
+call_tail      -> "(" call_arguments ")" | empty
+call_arguments -> expression call_arguments_tail | empty
+call_arguments_tail -> "," expression call_arguments_tail | empty
 
 Terminals:
   Symbol  = a name (TokenType::Symbol), including type, function and variable names
@@ -45,6 +48,7 @@ Examples:
   word_8 identity(word_8 x) { return x; }
   word_8 sum(word_8 a, word_8 b, word_8 c) { return a + b + c; }
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
+  word_8 caller() { return identity(zero()) + identity(1); }
 
 Only function definitions are allowed at top level. Functions cannot be nested.
 A function requires a body: one declaration, assignment, return or block statement.
@@ -57,7 +61,11 @@ Symbol, another Symbol starts a declaration;
 "{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 "return" starts a return statement and requires an expression followed by ";".
 Only the exact name "return" is a keyword; names such as "returnValue" remain Symbols.
-Expressions contain numbers, variable names and additions, with parentheses for grouping.
+Expressions contain numbers, variable names, function calls and additions, with parentheses for grouping.
+Within an expression, a name followed by "(" starts a call; otherwise it is a variable reference.
+Call arguments are comma-separated expressions. The list may be empty but cannot have a trailing comma.
+Calls can appear in initializers, assignment RHSs, returns and other expressions, including call arguments.
+Only named functions can be called. Standalone calls such as foo(); are not supported.
 Addition is left-associative: a + b + c builds (a + b) + c.
 Each "+" wraps the accumulated expression as its left child and the next primary as its right.
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
@@ -103,4 +111,5 @@ a nested block is sufficient. Unreachable statements are not diagnosed.
 Returns lower to an IR return instruction with either a literal or a source slot.
 Lowering ends the function's block at the first return and emits no later statements.
 The resolver still validates those later statements.
-Function calls are not supported yet.
+Function calls are currently parsed only. Function lookup, argument checks, lowering and execution
+of calls are not implemented yet.

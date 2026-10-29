@@ -20,8 +20,37 @@ std::unique_ptr<Expression> parse_primary(const std::vector<Token>& tokens, std:
 
     if (i < tokens.size() && tokens[i].type == TokenType::Symbol) {
 
+        const std::string name = tokens[i++].body;
+
+        if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
+
+            ++i;
+            auto expression = std::make_unique<CallExpression>();
+            expression->name = name;
+
+            if (i < tokens.size() && tokens[i].type != TokenType::RightParen) {
+
+                while (true) {
+
+                    expression->arguments.push_back(parse_expression(tokens, i));
+
+                    if (i == tokens.size() || tokens[i].type != TokenType::Comma) {
+                        break;
+                    }
+
+                    ++i;
+
+                }
+
+            }
+
+            consume(tokens, i, TokenType::RightParen, "')' after call arguments");
+            return expression;
+
+        }
+
         auto expression = std::make_unique<VariableExpression>();
-        expression->name = tokens[i++].body;
+        expression->name = name;
         return expression;
 
     }

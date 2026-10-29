@@ -21,6 +21,13 @@ struct VariableExpression : public Expression {
     std::string name;
 };
 
+struct CallExpression : public Expression {
+
+    std::string name;
+    std::vector<std::unique_ptr<Expression>> arguments;
+
+};
+
 struct AdditionExpression : public Expression {
 
     std::unique_ptr<Expression> left;

@@ -17,6 +17,24 @@ std::string format_expression(const Expression* expression) {
         return variable->name;
     }
 
+    if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
+
+        std::string output = call->name + "(";
+
+        for (std::size_t i = 0; i < call->arguments.size(); ++i) {
+
+            if (i != 0) {
+                output += ", ";
+            }
+
+            output += format_expression(call->arguments[i].get());
+
+        }
+
+        return output + ")";
+
+    }
+
     if (const auto* addition = dynamic_cast<const AdditionExpression*>(expression)) {
         return "(" + format_expression(addition->left.get()) + " + " + format_expression(addition->right.get()) + ")";
     }
