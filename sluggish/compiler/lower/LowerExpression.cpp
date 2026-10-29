@@ -25,6 +25,22 @@ std::size_t lower_expression(const ResolvedExpression* expression,
 
     }
 
+    if (const auto* call = dynamic_cast<const ResolvedCallExpression*>(expression)) {
+
+        auto instruction = std::make_unique<CallInstruction>();
+        instruction->function_name = call->function->name;
+
+        for (const auto& argument : call->arguments) {
+            instruction->argument_slots.push_back(lower_expression(argument.get(), slots, block, next_slot));
+        }
+
+        const auto destination_slot = allocate_slot(call->type, block, next_slot);
+        instruction->destination_slot = destination_slot;
+        block.instructions.push_back(std::move(instruction));
+        return destination_slot;
+
+    }
+
     if (const auto* addition = dynamic_cast<const ResolvedAdditionExpression*>(expression)) {
 
         const auto left_slot = lower_expression(addition->left.get(), slots, block, next_slot);

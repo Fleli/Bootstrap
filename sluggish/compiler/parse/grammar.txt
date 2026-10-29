@@ -116,4 +116,8 @@ Function calls bind to a resolved function and require exactly its declared argu
 Arguments are resolved in the caller's scope using each parameter's expected type.
 The call's return type must match its surrounding expected type; no implicit conversions are allowed.
 A local variable or argument shadows a function of the same name and cannot be called.
-Lowering and execution of calls are not implemented yet.
+Call arguments are lowered left-to-right into slots in the caller's function.
+A Call instruction stores the function name, ordered argument slots and a destination slot.
+Each call gets a temporary result slot with the function's return type.
+The lower dump prints Call destination, function(argument slots).
+Execution of calls is not implemented yet.

@@ -45,6 +45,15 @@ struct AddInstruction : public BasicBlockInstruction {
 
 };
 
+// Argument and result slots belong to the caller.
+struct CallInstruction : public BasicBlockInstruction {
+
+    std::string function_name;
+    std::vector<std::size_t> argument_slots;
+    std::size_t destination_slot;
+
+};
+
 // Ends the block and returns from the function.
 struct ReturnInstruction : public BasicBlockInstruction {
 

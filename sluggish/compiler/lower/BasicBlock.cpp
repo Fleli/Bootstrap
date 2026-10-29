@@ -45,6 +45,22 @@ std::vector<IRFunction> lower(const Resolver& resolver) {
 
                     output += "        Add             s" + std::to_string(add->destination_slot) + ", s" + std::to_string(add->left_slot) + ", s" + std::to_string(add->right_slot) + "\n";
 
+                } else if (const auto* call = dynamic_cast<const CallInstruction*>(instruction.get())) {
+
+                    output += "        Call            s" + std::to_string(call->destination_slot) + ", " + call->function_name + "(";
+
+                    for (std::size_t i = 0; i < call->argument_slots.size(); ++i) {
+
+                        if (i != 0) {
+                            output += ", ";
+                        }
+
+                        output += "s" + std::to_string(call->argument_slots[i]);
+
+                    }
+
+                    output += ")\n";
+
                 } else if (const auto* returned = dynamic_cast<const ReturnInstruction*>(instruction.get())) {
 
                     output += "        Return          ";
