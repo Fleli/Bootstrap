@@ -114,4 +114,5 @@ Program startup and result:
   Code, result storage and the downward-growing stack must not overlap.
 
 The stack instructions and calling convention above are the target contract.
-Assembler, emulator and backend support will be added in subsequent stages.
+The assembler supports the stack instructions. Emulator execution and backend
+support for the calling convention will be added in subsequent stages.

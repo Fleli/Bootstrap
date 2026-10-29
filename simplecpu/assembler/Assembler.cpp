@@ -59,6 +59,31 @@ std::vector<std::uint32_t> assemble(const std::vector<Instruction>& instructions
                 words.push_back((5u << 24) | (a << 16) | (b << 8) | c);
                 break;
 
+            case Opcode::Push:
+                if (a > 255) {
+                    throw std::runtime_error("Register exceeds r255");
+                }
+
+                words.push_back((6u << 24) | (a << 16));
+                break;
+
+            case Opcode::Pop:
+                if (a > 255) {
+                    throw std::runtime_error("Register exceeds r255");
+                }
+
+                words.push_back((7u << 24) | (a << 16));
+                break;
+
+            case Opcode::Call:
+                words.push_back(8u << 24);
+                words.push_back(a);
+                break;
+
+            case Opcode::Ret:
+                words.push_back(9u << 24);
+                break;
+
             default:
                 throw std::runtime_error("Unknown SimpleCPU opcode");
 

@@ -12,6 +12,10 @@ enum class Opcode {
     Store,
     Load,
     Add,
+    Push,
+    Pop,
+    Call,
+    Ret,
 };
 
 struct Instruction {

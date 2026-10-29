@@ -26,6 +26,18 @@ std::string Instruction::text() const {
         case Opcode::Add:
             return "add             r" + std::to_string(operand_a) + ", r" + std::to_string(operand_b) + ", r" + std::to_string(operand_c);
 
+        case Opcode::Push:
+            return "push            r" + std::to_string(operand_a);
+
+        case Opcode::Pop:
+            return "pop             r" + std::to_string(operand_a);
+
+        case Opcode::Call:
+            return "call            " + std::to_string(operand_a);
+
+        case Opcode::Ret:
+            return "ret";
+
     }
 
     throw std::runtime_error("Unknown SimpleCPU opcode");
