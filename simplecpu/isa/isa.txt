@@ -16,12 +16,18 @@ B
 C
     word_a      1-[31:0]
     word_b      2-[31:0]
-D   
+D
     register    0-[23:16]
     word_a      1-[31:0]
-E 
+E
     reg_a       0-[23:16]
     reg_b       0-[15:08]
+F
+    register    0-[23:16]
+G
+    word_a      1-[31:0]
+
+Unused fields are encoded as zero.
 
 
 opcode      instruction     format          operands
@@ -31,16 +37,81 @@ opcode      instruction     format          operands
 3           store           E               (address reg, value reg)
 4           load            E               (target-reg, source addr)
 5           add             B               (target-reg, left-reg, right-reg)
+6           push            F               (source-reg)
+7           pop             F               (target-reg)
+8           call            G               (absolute instruction address)
+9           ret             A               -
 
 add stores the low 32 bits of the two source registers' sum in the target register.
 The target register may also be either source register. add occupies one word.
 
+Stack instructions:
+  The stack grows towards lower RAM addresses. SP is r2.
+  An empty stack has SP equal to the RAM size in words, one past the last word.
+  When nonempty, RAM[SP] is the top stack word.
+
+  push reg: capture the register's value, decrement SP, then store the value at RAM[SP].
+  pop reg: read RAM[SP], increment SP, then write the value to the register.
+  This ordering also defines push r2 and pop r2. Both instructions occupy one word.
+
+  call address: push the address immediately after this entire two-word instruction,
+                then set PC to address. The target is an absolute RAM word address.
+  ret: pop the return address into PC. ret occupies one word.
+
+  call and ret only manage the return address and PC. They do not change FP,
+  pass arguments, allocate locals or release arguments.
+
 The backend passes structured instructions directly to the assembler.
 Assembly text and hexadecimal words are emitted as readable dumps.
-
-The backend emits every function under its own label, with zero-argument main first at RAM word 0.
 Each function's entry address is measured in encoded words. Labels occupy no words.
-Storage follows all function code, with one 32-bit word per argument, local or temporary slot.
-Each function has separate storage. Argument slots are reserved but argument passing is not implemented.
-Every return places the result in r0 and halts, so main does not fall through into the other functions.
-The runner prints main's result. Calling functions and returning to a caller remain unimplemented.
+
+Calling convention:
+  r1 is the frame pointer (FP), and r2 is the stack pointer (SP).
+  r0 and r3-r255 are scratch registers and may be overwritten by a call.
+  Values needed after a call are kept in the caller's frame.
+
+  The caller reserves result storage in its own frame and evaluates arguments
+  left-to-right before pushing anything for the call. It then pushes the result
+  storage address, pushes argument values in source order, and executes call.
+  The result storage address is a hidden argument, separate from source parameters.
+  Each argument currently occupies one word, including word_8 and word_16 values.
+
+  On entry, the callee pushes the caller's FP, sets FP = SP, then reserves its
+  entire local and temporary storage by decreasing SP. FP stays fixed throughout
+  the body, including while setting up calls to other functions.
+
+  Frame layout for n one-word arguments:
+    FP + n + 2       address of the caller's result storage
+    FP + n + 1 - i   argument i, where 0 <= i < n
+    FP + 1           return instruction address
+    FP               saved caller FP
+    FP - 1, FP - 2, ...  locals and temporaries
+
+  With no arguments, the result storage address is at FP + 2.
+  Locals and temporaries currently occupy one word each. IR slots map to offsets
+  within each invocation's frame, so recursive calls have separate storage.
+
+  To return, the callee writes the result through the hidden result storage pointer,
+  sets SP = FP, executes pop r1 to restore the caller's FP, then executes ret.
+  The caller then increases SP by n + 1 to release its arguments and hidden pointer.
+  The result is already in its destination slot; no return-value register is used.
+  Larger return values can use several consecutive words in the caller's storage.
+
+Program startup and result:
+  MAIN_RESULT_ADDRESS is RAM word 0. Address 0 is a valid result storage pointer.
+  Currently the result area is one word, since main returns word_8 or word_16.
+  Code is loaded starting at word 1, and execution starts there at generated _start
+  code. The loader, entry PC and assembled labels all use this same code base.
+  The backend emits _start, then main and the remaining functions.
+
+  _start initializes FP = 0 and SP = the RAM size in words. It pushes
+  MAIN_RESULT_ADDRESS and calls main, which takes no source arguments. After main
+  returns, _start releases the hidden pointer and halts. main uses the same return
+  convention as other functions. The runner and tests read RAM[MAIN_RESULT_ADDRESS].
+
+  When larger main return types are supported, reserve enough consecutive words
+  starting at word 0 and load code after that region. The result address stays fixed.
+  Code, result storage and the downward-growing stack must not overlap.
+
+The stack instructions and calling convention above are the target contract.
+Assembler, emulator and backend support will be added in subsequent stages.
