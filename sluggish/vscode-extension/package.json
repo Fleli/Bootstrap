@@ -1,0 +1,31 @@
+{
+    "name": "sluggish",
+    "displayName": "Sluggish",
+    "description": "Basic syntax highlighting for Sluggish source files.",
+    "version": "0.0.1",
+    "publisher": "sluggish-local",
+    "license": "UNLICENSED",
+    "engines": {
+        "vscode": "^1.70.0"
+    },
+    "categories": ["Programming Languages"],
+    "files": ["language-configuration.json", "syntaxes/**", "README.md"],
+    "contributes": {
+        "languages": [{
+            "id": "sluggish",
+            "aliases": ["Sluggish", "sluggish"],
+            "extensions": [".slug"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sluggish",
+            "scopeName": "source.sluggish",
+            "path": "./syntaxes/sluggish.tmLanguage.json"
+        }],
+        "configurationDefaults": {
+            "[sluggish]": {
+                "editor.bracketPairColorization.enabled": true
+            }
+        }
+    }
+}

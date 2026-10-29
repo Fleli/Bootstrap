@@ -1,0 +1,42 @@
+{
+    "name": "Sluggish",
+    "scopeName": "source.sluggish",
+    "patterns": [
+        {
+            "name": "keyword.control.sluggish",
+            "match": "return(?![A-Za-z0-9_])"
+        },
+        {
+            "name": "storage.type.sluggish",
+            "match": "word_(8|16)(?![A-Za-z0-9_])"
+        },
+        {
+            "name": "constant.numeric.integer.sluggish",
+            "match": "[0-9]+"
+        },
+        {
+            "name": "variable.other.sluggish",
+            "match": "[A-Za-z_][A-Za-z0-9_]*"
+        },
+        {
+            "name": "keyword.operator.sluggish",
+            "match": "[+=]"
+        },
+        {
+            "name": "punctuation.section.block.sluggish",
+            "match": "[{}]"
+        },
+        {
+            "name": "punctuation.section.parens.sluggish",
+            "match": "[()]"
+        },
+        {
+            "name": "punctuation.terminator.statement.sluggish",
+            "match": ";"
+        },
+        {
+            "name": "punctuation.separator.comma.sluggish",
+            "match": ","
+        }
+    ]
+}

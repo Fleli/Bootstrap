@@ -2,7 +2,7 @@
 word_16 main() {
     word_16 x = 4;
     word_16 k = double(fifty() + x);
-    return x + 6;
+    return k + 6;
 }
 
 word_16 fifty() {
