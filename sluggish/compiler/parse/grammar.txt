@@ -1,33 +1,48 @@
 Sluggish grammar -- design reference, not a parser generator input.
 
-program        -> statement program | empty
+program        -> function program | empty
+function       -> Symbol Symbol "(" arguments ")" statement
+arguments      -> argument arguments_tail | empty
+arguments_tail -> "," argument arguments_tail | empty
+argument       -> Symbol Symbol
+
+statements     -> statement statements | empty
 statement      -> Symbol statement_tail
-                | "{" program "}"
+                | "{" statements "}"
 statement_tail -> Symbol initializer ";"
                 | "=" value ";"
 initializer    -> "=" value | empty
 value          -> Number | Symbol
 
 Terminals:
-  Symbol  = a name (TokenType::Symbol), including type and variable names
+  Symbol  = a name (TokenType::Symbol), including type, function and variable names
   Number  = a decimal integer literal (TokenType::Number)
   "="     = TokenType::EqualSign
   ";"     = TokenType::Semicolon
   "{"     = TokenType::LeftBrace
   "}"     = TokenType::RightBrace
+  "("     = TokenType::LeftParen
+  ")"     = TokenType::RightParen
+  ","     = TokenType::Comma
 
 empty consumes no tokens. The program must consume the entire token sequence.
 
 Examples:
-  word_8 x;       -- declaration
-  word_8 x = 5;   -- declaration with initializer
-  word_8 y = x;   -- declaration with variable initializer
-  x = 5;          -- assignment
-  x = y;          -- assignment from a variable
-  { word_8 x; }   -- nested scope
-  {}              -- empty scope
+  word_8 empty() {}
+  word_8 example(word_8 a, word_16 b) {
+      word_8 x = a;
+      { word_8 x = 5; }
+      x = 6;
+  }
+  word_8 single(word_8 x) x = 5;
 
-LL(1): after the first Symbol, another Symbol starts a declaration;
+Only function definitions are allowed at top level. Functions cannot be nested.
+A function requires a body: one declaration, assignment or block statement.
+Arguments are Type name pairs separated by commas. The list may be empty,
+but a trailing comma, argument initializer or function prototype is not allowed.
+
+LL(1): top level always expects a function. Within a statement, after the first
+Symbol, another Symbol starts a declaration;
 "=" starts an assignment. An initializer is absent when the next token is ";".
 "{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 Each value is a single number or variable name; operators are not supported yet.
@@ -40,3 +55,7 @@ Variable lookup searches the current scope, then its enclosing scopes.
 An inner declaration can shadow an outer name; names declared inside do not escape.
 Declarations become visible in source order; forward references are not allowed.
 Initialization is not checked yet.
+
+A function introduces a scope containing its arguments. A block body introduces
+an additional nested scope. Function resolution is not implemented yet.
+Return statements and function calls are not supported yet.
