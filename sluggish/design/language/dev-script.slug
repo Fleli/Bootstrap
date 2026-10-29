@@ -1,8 +1,9 @@
 
 word_16 main() {
     word_16 x = 3;
-    word_16 y = x;
-    return y;
+    word_16 y = 2;
+    word_16 z = x + y;
+    return z;
 }
 
 word_8 secondary(word_16 inp1, word_8 inp2) {

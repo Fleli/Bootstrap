@@ -11,6 +11,7 @@ enum class Opcode {
     LoadImm,
     Store,
     Load,
+    Add,
 };
 
 struct Instruction {
@@ -18,6 +19,7 @@ struct Instruction {
     Opcode opcode;
     std::uint32_t operand_a = 0;
     std::uint32_t operand_b = 0;
+    std::uint32_t operand_c = 0;
 
     // One assembly line, without indentation or a trailing newline.
     std::string text() const;

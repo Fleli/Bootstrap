@@ -50,6 +50,10 @@ std::vector<Instruction> build_assembly(const std::vector<sluggish::IRFunction>&
 
             next_address += 6;
 
+        } else if (dynamic_cast<const sluggish::AddInstruction*>(instruction.get())) {
+
+            next_address += 10;
+
         } else if (const auto* returned = dynamic_cast<const sluggish::ReturnInstruction*>(instruction.get())) {
 
             if (instruction.get() != block.instructions.back().get()) {
@@ -108,6 +112,20 @@ std::vector<Instruction> build_assembly(const std::vector<sluggish::IRFunction>&
 
             assembly.push_back({Opcode::LoadImm, 0, source});
             assembly.push_back({Opcode::Load, 1, 0});
+            assembly.push_back({Opcode::LoadImm, 0, destination});
+            assembly.push_back({Opcode::Store, 0, 1});
+
+        } else if (const auto* add = dynamic_cast<const sluggish::AddInstruction*>(instruction.get())) {
+
+            const auto left = addresses.at(add->left_slot);
+            const auto right = addresses.at(add->right_slot);
+            const auto destination = addresses.at(add->destination_slot);
+
+            assembly.push_back({Opcode::LoadImm, 0, left});
+            assembly.push_back({Opcode::Load, 1, 0});
+            assembly.push_back({Opcode::LoadImm, 0, right});
+            assembly.push_back({Opcode::Load, 2, 0});
+            assembly.push_back({Opcode::Add, 1, 1, 2});
             assembly.push_back({Opcode::LoadImm, 0, destination});
             assembly.push_back({Opcode::Store, 0, 1});
 

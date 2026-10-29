@@ -63,7 +63,7 @@ Each "+" wraps the accumulated expression as its left child and the next primary
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition to show its tree structure.
-Addition is resolved and lowered recursively; CPU backend support is pending.
+Addition is resolved and lowered recursively, then executed by SimpleCPU.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
 The resolver checks that each assigned literal fits its declared type.
@@ -78,6 +78,8 @@ Lowering emits an Add instruction with left, right and destination slots for eac
 Literal operands are stored in temporary slots; variable operands use their existing slots.
 Each addition result gets a temporary slot. Arguments, locals and temporaries share one
 slot counter per function. The lower dump prints Add destination, left, right.
+The CPU backend loads both operands, adds their 32-bit register values and stores the result.
+Overflow handling for the narrower word_8 and word_16 types is deferred.
 Duplicate declarations are rejected only within the current scope.
 Variable lookup searches the current scope, then its enclosing scopes.
 An inner declaration can shadow an outer name; names declared inside do not escape.

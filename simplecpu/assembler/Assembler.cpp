@@ -12,6 +12,7 @@ std::vector<std::uint32_t> assemble(const std::vector<Instruction>& instructions
 
         const auto a = instruction.operand_a;
         const auto b = instruction.operand_b;
+        const auto c = instruction.operand_c;
 
         switch (instruction.opcode) {
 
@@ -48,6 +49,14 @@ std::vector<std::uint32_t> assemble(const std::vector<Instruction>& instructions
                 }
 
                 words.push_back((4u << 24) | (a << 16) | (b << 8));
+                break;
+
+            case Opcode::Add:
+                if (a > 255 || b > 255 || c > 255) {
+                    throw std::runtime_error("Register exceeds r255");
+                }
+
+                words.push_back((5u << 24) | (a << 16) | (b << 8) | c);
                 break;
 
             default:

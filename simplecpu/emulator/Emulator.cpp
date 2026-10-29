@@ -13,6 +13,7 @@ void Emulator::run() {
         const auto opcode = instruction >> 24;
         const auto a = (instruction >> 16) & 0xff;
         const auto b = (instruction >> 8) & 0xff;
+        const auto c = instruction & 0xff;
 
         switch (opcode) {
 
@@ -39,6 +40,10 @@ void Emulator::run() {
 
             case 4: // load
                 registers[a] = ram.at(registers[b]);
+                break;
+
+            case 5: // add
+                registers[a] = registers[b] + registers[c];
                 break;
 
             default:
