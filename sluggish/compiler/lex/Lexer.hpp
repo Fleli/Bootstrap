@@ -7,7 +7,8 @@
 
 namespace sluggish {
 
-// Names, decimal integers, '=', '+', ';', '{', '}', '(', ')', ',' and '.'. Whitespace is skipped.
+// Names, decimal integers, '=', '+', '*', '&', ';', '{', '}', '(', ')', ',' and '.'.
+// Whitespace is skipped.
 // The keywords 'return' and 'struct' have their own token types.
 // Writes one token per line to intermediate/lex.txt through emit().
 // Unsupported characters throw std::runtime_error.

@@ -9,6 +9,8 @@ enum class TokenType {
     Symbol,
     EqualSign,
     PlusSign,
+    Asterisk,
+    Ampersand,
     Semicolon,
     LeftBrace,
     RightBrace,
