@@ -95,7 +95,7 @@ Pointer syntax examples:
       return *q;
   }
 
-Method syntax (definitions and calls are parsed; resolution is still pending):
+Method syntax (definitions and calls are parsed; only method signatures are resolved):
   struct Counter {
       word_16 value;
       word_16 get() return self.value;
@@ -119,7 +119,7 @@ After Type name, "(" starts a method and ";" ends a field declaration.
 Fields and methods may be interleaved. The AST stores fields and methods separately,
 preserving declaration order within each list. Methods reuse the Function AST type.
 The parse dump shows fields first, followed by indented functions and their bodies.
-self is still an ordinary Symbol; its receiver meaning will be added in the resolver.
+self is still an ordinary Symbol; its meaning inside method bodies is not resolved yet.
 Types are a name followed by zero or more "*" tokens. The same type parser is used
 for variables, struct members, function parameters and return types. Whitespace
 around "*" is ignored; the AST records a normalized name such as "word_16**".
@@ -200,6 +200,20 @@ an additional nested scope. Duplicate function names and duplicate argument name
 within one function are rejected. All function names, return types and argument types
 are resolved before any body, allowing forward calls and recursive references.
 Each resolved function keeps its arguments and flattened body separate.
+The resolver owns global functions and methods in one functions list, with separate
+lookup tables. Global functions are looked up by name; methods are looked up by
+owning struct type and source method name. Methods do not become global symbols.
+A method's internal function name is StructName.methodName. Its first argument is
+a hidden self pointer to the owning struct, followed by the explicit parameters.
+All method and global signatures are registered before resolving any bodies.
+Method return and parameter types use the same type lookup as global functions,
+including structs defined later. Duplicate method names within one struct and
+duplicate parameter names are rejected; an explicit self parameter conflicts with
+the hidden receiver. Different structs and global functions may reuse a method name.
+Methods are separate from stored fields and do not affect a struct's storage layout.
+Only global function bodies are resolved at this stage. Method bodies, the source
+meaning of self, and method-call resolution remain pending. Registered methods have
+no resolved body statements yet, so programs containing them cannot run on SimpleCPU.
 Each function lowers to its own IR function with typed argument slots and one block.
 SimpleCPU starts in generated _start code, which calls a zero-argument main and halts.
 main writes its result starting at RAM word 0. Code starts after the full result,

@@ -1,7 +1,6 @@
 #include "Resolver.hpp"
 
 #include <stdexcept>
-#include <utility>
 
 namespace sluggish {
 
@@ -22,9 +21,13 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
     types.check_recursive_members();
 
     for (const auto& statement : parsed_statements) {
-        if (dynamic_cast<const StructDefinition*>(statement.get()) == nullptr) {
+
+        if (const auto* definition = dynamic_cast<const StructDefinition*>(statement.get())) {
+            register_method_signatures(*definition);
+        } else {
             register_function_signature(statement.get());
         }
+
     }
 
     for (const auto& statement : parsed_statements) {
@@ -32,44 +35,6 @@ Resolver::Resolver(const std::vector<std::unique_ptr<Statement>>& parsed_stateme
             resolve_function_body(statement.get());
         }
     }
-
-}
-
-void Resolver::register_function_signature(const Statement* statement) {
-
-    const auto* function = dynamic_cast<const Function*>(statement);
-
-    if (function == nullptr) {
-        throw std::runtime_error("Expected a function in resolver");
-    }
-
-    if (function_symbols.find(function->name) != function_symbols.end()) {
-        throw std::runtime_error("Duplicate function: " + function->name);
-    }
-
-    auto resolved = std::make_unique<ResolvedFunction>();
-    resolved->name = function->name;
-    resolved->return_type = types.resolve(function->return_type_name);
-
-    Scope function_scope;
-
-    for (const auto& argument : function->arguments) {
-
-        if (function_scope.symbols.find(argument.name) != function_scope.symbols.end()) {
-            throw std::runtime_error("Duplicate argument: " + argument.name);
-        }
-
-        auto declaration = std::make_unique<ResolvedDeclaration>();
-        declaration->name = argument.name;
-        declaration->type = types.resolve(argument.type_name);
-
-        function_scope.symbols.emplace(declaration->name, declaration.get());
-        resolved->arguments.push_back(std::move(declaration));
-
-    }
-
-    function_symbols.emplace(resolved->name, resolved.get());
-    functions.push_back(std::move(resolved));
 
 }
 

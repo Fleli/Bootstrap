@@ -15,6 +15,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/parse/ParseStruct.cpp \
 	sluggish/compiler/parse/Format.cpp \
 	sluggish/compiler/resolver/Resolver.cpp \
+	sluggish/compiler/resolver/RegisterFunction.cpp \
 	sluggish/compiler/resolver/ResolveExpression.cpp \
 	sluggish/compiler/resolver/ResolveMember.cpp \
 	sluggish/compiler/resolver/ResolvePointer.cpp \

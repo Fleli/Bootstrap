@@ -16,6 +16,8 @@ class Resolver {
 public:
 
     TypeTable types;
+
+    // Owns both global functions and struct methods.
     std::vector<std::unique_ptr<ResolvedFunction>> functions;
 
     // Each function owns its arguments and flattened body statements.
@@ -24,10 +26,12 @@ public:
 private:
 
     std::unordered_map<std::string, ResolvedFunction*> function_symbols;
+    std::unordered_map<const Type*, std::unordered_map<std::string, ResolvedFunction*>> method_symbols;
 
     void resolve_struct_members(const StructDefinition& definition);
 
-    void register_function_signature(const Statement* statement);
+    void register_method_signatures(const StructDefinition& definition);
+    void register_function_signature(const Statement* statement, const Type* owner = nullptr);
     void resolve_function_body(const Statement* statement);
 
     void resolve(const Statement* statement, Scope& current_scope, ResolvedFunction& function);
