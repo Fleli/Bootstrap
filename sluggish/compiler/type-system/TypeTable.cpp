@@ -38,7 +38,23 @@ void TypeTable::register_struct(const std::string& name) {
 
 }
 
-const Type* TypeTable::resolve(const std::string& name) const {
+const Type* TypeTable::pointer_to(const Type* pointee) {
+
+    const auto type = pointers.find(pointee);
+
+    if (type != pointers.end()) {
+        return type->second.get();
+    }
+
+    return pointers.emplace(pointee, std::make_unique<Type>(pointee)).first->second.get();
+
+}
+
+const Type* TypeTable::resolve(const std::string& name) {
+
+    if (!name.empty() && name.back() == '*') {
+        return pointer_to(resolve(name.substr(0, name.size() - 1)));
+    }
 
     const auto type = structs.find(name);
 

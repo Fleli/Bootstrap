@@ -79,7 +79,7 @@ Examples:
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
   word_8 caller() { return identity(zero()) + identity(1); }
 
-Pointer syntax examples (parser support only for now):
+Pointer syntax examples (parsed and resolved; lowering is not implemented yet):
   struct Link {
       Link* next;
       word_16** data;
@@ -133,9 +133,8 @@ Each "+" wraps the accumulated expression as its left child and the next unary e
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition and unary operation to show its tree structure.
-Only pointer parsing is implemented at this stage; pointer type checking and execution
-will follow. The parser accepts syntactic expressions such as &5 or *7; deciding
-whether operands have the required type or are lvalues belongs to the resolver.
+Pointer parsing and resolution are implemented; lowering and execution will follow.
+The parser accepts syntactic expressions such as &5 or *7, which the resolver rejects.
 Addition is resolved and lowered recursively, then executed by SimpleCPU.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).
@@ -145,7 +144,7 @@ Initializers, assignments and returns share expression resolution using the expe
 Resolved expressions carry their type and a numeric value, a declaration reference,
 a function reference with argument expressions, or left and right operands for addition.
 Addition operands must have the same type, which is also the result type.
-Only word types support addition for now; struct addition is rejected.
+Only word types support addition for now; struct and pointer addition are rejected.
 Literals use the expected type from the assignment, return or call argument context.
 Addition results are not evaluated or checked for overflow during resolution.
 Lowering emits an Add instruction with left, right and destination slots for each addition.
@@ -203,7 +202,7 @@ The member's declared type becomes the expression's type. Unknown members and me
 access on a word are rejected. Chained members are resolved from the object outward.
 
 Assignment.target contains the full expression and resolves to a typed lvalue.
-Variables are lvalues; a member is an lvalue only when its object is one.
+Variables and pointer dereferences are lvalues; a member is an lvalue only when its object is one.
 Members of function-call results may be read, but cannot be assigned to.
 Numbers, additions and function-call results are not assignment targets.
 The RHS must have exactly the target's type, including for whole-struct copies.
@@ -220,3 +219,22 @@ The lower dump prints Member destination, source, member_index.
 The backend determines member offsets from the source slot's type. SimpleCPU stores
 each scalar in one RAM word and struct fields consecutively in declaration order.
 Empty structs occupy one word. Copies, arguments and returns copy all words by value.
+
+Pointer types store their pointee type: word_16** points to word_16*, which points to
+word_16. TypeTable owns and reuses pointer types, so repeated occurrences of the same
+pointer type have the same Type identity. Unknown base types are rejected.
+The type table moves into IRProgram together with its struct and pointer types.
+Pointer storage width is left to the target backend.
+
+Address-of resolves its operand, requires an lvalue, and produces a pointer to the
+operand's type. The resulting pointer value is not itself an lvalue.
+Dereference requires a pointer and produces an lvalue of its pointee type, even when
+the pointer comes from a function call. This allows *get_pointer() = value and
+&(*p).member using the existing assignment and member resolution rules.
+Assignments, arguments and returns require exact pointer types, including pointer
+depth and the identity of a pointed-to struct. Numeric literals cannot initialize
+pointers, including 0; there are no implicit pointer conversions or pointer arithmetic.
+Pointer initialization and lifetime checks are not implemented.
+
+Recursive containment checks follow only inline struct members, not pointer pointees.
+Thus struct Node { Node* next; } is valid, while struct Node { Node next; } is not.

@@ -43,6 +43,14 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
         return resolve_member_expression(*member, scope, expected_type);
     }
 
+    if (const auto* address = dynamic_cast<const AddressOfExpression*>(expression)) {
+        return resolve_address_of_expression(*address, scope, expected_type);
+    }
+
+    if (const auto* dereference = dynamic_cast<const DereferenceExpression*>(expression)) {
+        return resolve_dereference_expression(*dereference, scope, expected_type);
+    }
+
     if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
 
         if (scope.find(call->name) != nullptr) {
@@ -83,7 +91,7 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
         auto resolved = std::make_unique<ResolvedAdditionExpression>();
         resolved->left = resolve_expression(addition->left.get(), scope, expected_type);
 
-        if (resolved->left->type->is_struct()) {
+        if (!resolved->left->type->is_word()) {
             throw std::runtime_error("Addition requires word operands");
         }
 

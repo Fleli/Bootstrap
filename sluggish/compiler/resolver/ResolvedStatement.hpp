@@ -44,6 +44,18 @@ struct ResolvedVariableExpression : public ResolvedExpression {
 
 };
 
+struct ResolvedAddressOfExpression : public ResolvedExpression {
+    std::unique_ptr<ResolvedExpression> operand;
+};
+
+struct ResolvedDereferenceExpression : public ResolvedExpression {
+
+    std::unique_ptr<ResolvedExpression> operand;
+
+    bool is_lvalue() const override { return true; }
+
+};
+
 struct ResolvedMemberExpression : public ResolvedExpression {
 
     std::size_t member_index;

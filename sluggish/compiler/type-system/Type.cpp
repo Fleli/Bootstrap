@@ -13,7 +13,10 @@ Type::Type(unsigned int bits) : width(bits), type_name("word_" + std::to_string(
 
 }
 
-Type::Type(std::string name) : structure(true), type_name(std::move(name)) {}
+Type::Type(std::string name) : kind(Kind::Struct), type_name(std::move(name)) {}
+
+Type::Type(const Type* pointee)
+    : kind(Kind::Pointer), type_name(pointee->name() + "*"), pointed_type(pointee) {}
 
 std::string Type::name() const {
     return type_name;
@@ -21,8 +24,9 @@ std::string Type::name() const {
 
 std::uint16_t Type::parse_literal(const std::string& text) const {
 
-    if (is_struct()) {
-        throw std::runtime_error("Cannot initialize struct " + name() + " with a number");
+    if (!is_word()) {
+        const std::string kind_name = is_struct() ? "struct " : "pointer ";
+        throw std::runtime_error("Cannot initialize " + kind_name + name() + " with a number");
     }
 
     if (text.empty()) {
