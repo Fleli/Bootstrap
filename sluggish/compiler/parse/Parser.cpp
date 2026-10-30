@@ -29,7 +29,7 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
         }
 
         auto function = std::make_unique<Function>();
-        function->return_type_name = consume(tokens, i, TokenType::Symbol, "a return type").body;
+        function->return_type_name = parse_type(tokens, i);
         function->name = consume(tokens, i, TokenType::Symbol, "a function name").body;
         consume(tokens, i, TokenType::LeftParen, "'(' after a top-level function name");
 
@@ -38,7 +38,7 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
             while (true) {
 
                 Argument argument;
-                argument.type_name = consume(tokens, i, TokenType::Symbol, "an argument type").body;
+                argument.type_name = parse_type(tokens, i);
                 argument.name = consume(tokens, i, TokenType::Symbol, "an argument name").body;
                 function->arguments.push_back(std::move(argument));
 

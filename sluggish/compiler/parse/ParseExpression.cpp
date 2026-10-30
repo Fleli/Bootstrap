@@ -86,18 +86,42 @@ std::unique_ptr<Expression> parse_postfix(const std::vector<Token>& tokens, std:
 
 }
 
+std::unique_ptr<Expression> parse_unary(const std::vector<Token>& tokens, std::size_t& i) {
+
+    if (i < tokens.size() && tokens[i].type == TokenType::Ampersand) {
+
+        ++i;
+        auto expression = std::make_unique<AddressOfExpression>();
+        expression->operand = parse_unary(tokens, i);
+        return expression;
+
+    }
+
+    if (i < tokens.size() && tokens[i].type == TokenType::Asterisk) {
+
+        ++i;
+        auto expression = std::make_unique<DereferenceExpression>();
+        expression->operand = parse_unary(tokens, i);
+        return expression;
+
+    }
+
+    return parse_postfix(tokens, i);
+
+}
+
 } // namespace
 
 std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i) {
 
-    auto expression = parse_postfix(tokens, i);
+    auto expression = parse_unary(tokens, i);
 
     while (i < tokens.size() && tokens[i].type == TokenType::PlusSign) {
 
         ++i;
         auto addition = std::make_unique<AdditionExpression>();
         addition->left = std::move(expression);
-        addition->right = parse_postfix(tokens, i);
+        addition->right = parse_unary(tokens, i);
         expression = std::move(addition);
 
     }

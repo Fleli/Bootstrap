@@ -4,21 +4,24 @@ program        -> definition program | empty
 definition     -> function | struct
 struct         -> "struct" Symbol "{" members "}"
 members        -> member members | empty
-member         -> Symbol Symbol ";"
-function       -> Symbol Symbol "(" arguments ")" statement
+member         -> type Symbol ";"
+function       -> type Symbol "(" arguments ")" statement
 arguments      -> argument arguments_tail | empty
 arguments_tail -> "," argument arguments_tail | empty
-argument       -> Symbol Symbol
+argument       -> type Symbol
+type           -> Symbol pointer_tail
+pointer_tail   -> "*" pointer_tail | empty
 
 statements     -> statement statements | empty
 statement      -> declaration | assignment
                 | "{" statements "}"
                 | "return" expression ";"
-declaration    -> Symbol Symbol initializer ";"
+declaration    -> type Symbol initializer ";"
 assignment     -> expression "=" expression ";"
 initializer    -> "=" expression | empty
-expression     -> postfix addition_tail
-addition_tail  -> "+" postfix addition_tail | empty
+expression     -> unary addition_tail
+addition_tail  -> "+" unary addition_tail | empty
+unary          -> "&" unary | "*" unary | postfix
 postfix        -> primary member_tail
 member_tail    -> "." Symbol member_tail | empty
 primary        -> Number | Symbol call_tail | "(" expression ")"
@@ -31,6 +34,8 @@ Terminals:
   Number  = a decimal integer literal (TokenType::Number)
   "="     = TokenType::EqualSign
   "+"     = TokenType::PlusSign
+  "*"     = TokenType::Asterisk
+  "&"     = TokenType::Ampersand
   ";"     = TokenType::Semicolon
   "{"     = TokenType::LeftBrace
   "}"     = TokenType::RightBrace
@@ -74,38 +79,63 @@ Examples:
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
   word_8 caller() { return identity(zero()) + identity(1); }
 
+Pointer syntax examples (parser support only for now):
+  struct Link {
+      Link* next;
+      word_16** data;
+  }
+  word_16* identity_pointer(word_16* p) return p;
+  word_16 pointers(word_16* p, word_16** pp, Point* point) {
+      word_16* q = &**pp;
+      **pp = *identity_pointer(p) + *q;
+      (*point).x = 7;
+      q = &(*point).x;
+      return *q;
+  }
+
 Only function and struct definitions are allowed at top level. Neither can be nested.
 Struct definitions end at "}" without a trailing semicolon. Their members are
 Type name declarations ending in ";", with no initializers, methods or constructors.
+Types are a name followed by zero or more "*" tokens. The same type parser is used
+for variables, struct members, function parameters and return types. Whitespace
+around "*" is ignored; the AST records a normalized name such as "word_16**".
 Member types may name other structs; the parser records these names without resolving them.
 A function requires a body: one declaration, assignment, return or block statement.
 Arguments are Type name pairs separated by commas. The list may be empty,
 but a trailing comma, argument initializer or function prototype is not allowed.
 
 At top level, "struct" starts a struct definition; a Symbol starts a function.
-Within a statement, two initial Symbols start a declaration. Otherwise an expression
-is parsed as the assignment target, followed by "=" and the value expression.
+Within a statement, an initial Symbol followed by zero or more "*" tokens and
+another Symbol starts a declaration. Otherwise an expression is parsed as the
+assignment target, followed by "=" and the value expression.
 Checking whether that target is an assignable lvalue belongs to the resolver.
 An initializer is absent when the next token is ";".
 "{" starts a block; its statements end at the matching "}". Blocks do not take a semicolon.
 "return" starts a return statement and requires an expression followed by ";".
 Only the exact names "return" and "struct" are keywords; names such as "returnValue"
 and "structure" remain Symbols.
-Expressions contain numbers, variable names, member access, function calls and additions,
-with parentheses for grouping.
+Expressions contain numbers, variable names, member access, function calls, unary
+address-of and dereference operations, and additions, with parentheses for grouping.
 Within an expression, a name followed by "(" starts a call; otherwise it is a variable reference.
 Call arguments are comma-separated expressions. The list may be empty but cannot have a trailing comma.
 Calls can appear in initializers, assignment RHSs, returns and other expressions, including call arguments.
 Only named functions can be called. Standalone calls such as foo(); are not supported.
-Member access is a postfix operation and binds tighter than addition:
+Member access is a postfix operation and binds tighter than unary operators and addition:
 a.x + b.y groups as (a.x) + (b.y). Chained access a.b.c groups as (a.b).c.
 Members can also be read after a call or grouped expression, such as make_point().x.
+Unary "&" and "*" recursively parse another unary expression, allowing **pp, &*p,
+and *get_pointer(). They bind tighter than addition: *p + x groups as (*p) + x.
+Member access binds tighter: *p.x groups as *(p.x), while (*p).x selects a member
+of a dereferenced value. &(*p).x takes the address of that selected member.
 Assignment targets and values share the same expression tree representation.
 Addition is left-associative: a + b + c builds (a + b) + c.
-Each "+" wraps the accumulated expression as its left child and the next postfix expression as its right.
+Each "+" wraps the accumulated expression as its left child and the next unary expression as its right.
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
-The parse dump parenthesizes each addition to show its tree structure.
+The parse dump parenthesizes each addition and unary operation to show its tree structure.
+Only pointer parsing is implemented at this stage; pointer type checking and execution
+will follow. The parser accepts syntactic expressions such as &5 or *7; deciding
+whether operands have the required type or are lvalues belongs to the resolver.
 Addition is resolved and lowered recursively, then executed by SimpleCPU.
 Whether a name refers to a valid type or variable is checked after parsing.
 The built-in types are word_8 and word_16 (unsigned 8-bit and 16-bit integers).

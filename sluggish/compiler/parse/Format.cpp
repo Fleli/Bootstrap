@@ -39,6 +39,14 @@ std::string format_expression(const Expression* expression) {
 
     }
 
+    if (const auto* address = dynamic_cast<const AddressOfExpression*>(expression)) {
+        return "(&" + format_expression(address->operand.get()) + ")";
+    }
+
+    if (const auto* dereference = dynamic_cast<const DereferenceExpression*>(expression)) {
+        return "(*" + format_expression(dereference->operand.get()) + ")";
+    }
+
     if (const auto* addition = dynamic_cast<const AdditionExpression*>(expression)) {
         return "(" + format_expression(addition->left.get()) + " + " + format_expression(addition->right.get()) + ")";
     }

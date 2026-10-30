@@ -21,6 +21,14 @@ struct VariableExpression : public Expression {
     std::string name;
 };
 
+struct AddressOfExpression : public Expression {
+    std::unique_ptr<Expression> operand;
+};
+
+struct DereferenceExpression : public Expression {
+    std::unique_ptr<Expression> operand;
+};
+
 struct MemberExpression : public Expression {
 
     std::string name;
@@ -104,6 +112,8 @@ struct Return : public Statement {
 std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens);
 
 const Token& consume(const std::vector<Token>& tokens, std::size_t& i, TokenType type, const std::string& expected);
+
+std::string parse_type(const std::vector<Token>& tokens, std::size_t& i);
 
 std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std::size_t& i);
