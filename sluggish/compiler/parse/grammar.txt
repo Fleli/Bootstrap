@@ -2,10 +2,12 @@ Sluggish grammar -- design reference, not a parser generator input.
 
 program        -> definition program | empty
 definition     -> function | struct
-struct         -> "struct" Symbol "{" members "}"
-members        -> member members | empty
-member         -> type Symbol ";"
-function       -> type Symbol "(" arguments ")" statement
+struct         -> "struct" Symbol "{" struct_items "}"
+struct_items   -> struct_item struct_items | empty
+struct_item    -> type Symbol struct_item_tail
+struct_item_tail -> ";" | function_tail
+function       -> type Symbol function_tail
+function_tail  -> "(" arguments ")" statement
 arguments      -> argument arguments_tail | empty
 arguments_tail -> "," argument arguments_tail | empty
 argument       -> type Symbol
@@ -93,9 +95,27 @@ Pointer syntax examples:
       return *q;
   }
 
-Only function and struct definitions are allowed at top level. Neither can be nested.
-Struct definitions end at "}" without a trailing semicolon. Their members are
-Type name declarations ending in ";", with no initializers, methods or constructors.
+Method definition syntax (parsing only; method calls and resolution are still pending):
+  struct Counter {
+      word_16 value;
+      word_16 get() return self.value;
+      word_16 set(word_16 next) {
+          self.value = next;
+          return self.value;
+      }
+  }
+
+Only function and struct definitions are allowed at top level. Structs may contain
+fields and methods, but no nested structs. Function and method bodies cannot contain
+function or struct definitions.
+Struct definitions end at "}" without a trailing semicolon. Fields are Type name
+declarations ending in ";", with no initializers. Methods use the same return type,
+argument list and body syntax as top-level functions. Constructors are not supported.
+After Type name, "(" starts a method and ";" ends a field declaration.
+Fields and methods may be interleaved. The AST stores fields and methods separately,
+preserving declaration order within each list. Methods reuse the Function AST type.
+The parse dump shows fields first, followed by indented functions and their bodies.
+self is still an ordinary Symbol; its receiver meaning will be added in the resolver.
 Types are a name followed by zero or more "*" tokens. The same type parser is used
 for variables, struct members, function parameters and return types. Whitespace
 around "*" is ignored; the AST records a normalized name such as "word_16**".

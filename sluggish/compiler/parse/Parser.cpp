@@ -28,33 +28,9 @@ std::vector<std::unique_ptr<Statement>> parse(const std::vector<Token>& tokens) 
             continue;
         }
 
-        auto function = std::make_unique<Function>();
-        function->return_type_name = parse_type(tokens, i);
-        function->name = consume(tokens, i, TokenType::Symbol, "a function name").body;
-        consume(tokens, i, TokenType::LeftParen, "'(' after a top-level function name");
-
-        if (i < tokens.size() && tokens[i].type != TokenType::RightParen) {
-
-            while (true) {
-
-                Argument argument;
-                argument.type_name = parse_type(tokens, i);
-                argument.name = consume(tokens, i, TokenType::Symbol, "an argument name").body;
-                function->arguments.push_back(std::move(argument));
-
-                if (i == tokens.size() || tokens[i].type != TokenType::Comma) {
-                    break;
-                }
-
-                ++i;
-
-            }
-
-        }
-
-        consume(tokens, i, TokenType::RightParen, "')'");
-        function->body = parse_statement(tokens, i);
-        definitions.push_back(std::move(function));
+        auto return_type_name = parse_type(tokens, i);
+        auto name = consume(tokens, i, TokenType::Symbol, "a function name").body;
+        definitions.push_back(parse_function(tokens, i, std::move(return_type_name), std::move(name)));
 
     }
 

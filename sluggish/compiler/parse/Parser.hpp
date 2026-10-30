@@ -61,13 +61,6 @@ struct StructMember {
 
 };
 
-struct StructDefinition : public Statement {
-
-    std::string name;
-    std::vector<StructMember> members;
-
-};
-
 struct Argument {
 
     std::string name;
@@ -81,6 +74,14 @@ struct Function : public Statement {
     std::string return_type_name;
     std::vector<Argument> arguments;
     std::unique_ptr<Statement> body;
+
+};
+
+struct StructDefinition : public Statement {
+
+    std::string name;
+    std::vector<StructMember> members;
+    std::vector<std::unique_ptr<Function>> methods;
 
 };
 
@@ -118,6 +119,10 @@ std::string parse_type(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<StructDefinition> parse_struct(const std::vector<Token>& tokens, std::size_t& i);
+
+// Parses the arguments and body after the return type and name have been consumed.
+std::unique_ptr<Function> parse_function(const std::vector<Token>& tokens, std::size_t& i,
+    std::string return_type_name, std::string name);
 
 std::string format_statement(const Statement* statement, const std::string& indentation);
 

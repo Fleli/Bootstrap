@@ -69,6 +69,10 @@ std::string format_statement(const Statement* statement, const std::string& inde
             output += indentation + "    Member          " + member.type_name + " " + member.name + "\n";
         }
 
+        for (const auto& method : definition->methods) {
+            output += format_statement(method.get(), indentation + "    ");
+        }
+
     } else if (const auto* function = dynamic_cast<const Function*>(statement)) {
 
         output += indentation + "Function        " + function->return_type_name + " " + function->name + "(";

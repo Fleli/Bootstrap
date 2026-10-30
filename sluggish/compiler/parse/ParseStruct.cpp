@@ -14,11 +14,18 @@ std::unique_ptr<StructDefinition> parse_struct(const std::vector<Token>& tokens,
 
     while (i < tokens.size() && tokens[i].type != TokenType::RightBrace) {
 
-        StructMember member;
-        member.type_name = parse_type(tokens, i);
-        member.name = consume(tokens, i, TokenType::Symbol, "a member name").body;
+        auto type_name = parse_type(tokens, i);
+        auto name = consume(tokens, i, TokenType::Symbol, "a member name").body;
+
+        if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
+
+            definition->methods.push_back(parse_function(tokens, i, std::move(type_name), std::move(name)));
+            continue;
+
+        }
+
         consume(tokens, i, TokenType::Semicolon, "';' after a member");
-        definition->members.push_back(std::move(member));
+        definition->members.push_back({std::move(name), std::move(type_name)});
 
     }
 

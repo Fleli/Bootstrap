@@ -7,6 +7,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/type-system/TypeTable.cpp \
 	sluggish/compiler/lex/Lexer.cpp \
 	sluggish/compiler/parse/Parser.cpp \
+	sluggish/compiler/parse/ParseFunction.cpp \
 	sluggish/compiler/parse/ParseType.cpp \
 	sluggish/compiler/parse/ParseExpression.cpp \
 	sluggish/compiler/parse/ParseStatement.cpp \
