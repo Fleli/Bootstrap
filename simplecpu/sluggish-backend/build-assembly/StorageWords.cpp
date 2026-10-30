@@ -10,6 +10,10 @@ std::uint32_t storage_words(const sluggish::Type* type) {
         throw std::runtime_error("Missing type for SimpleCPU storage");
     }
 
+    if (type->is_pointer()) {
+        return 1;
+    }
+
     if (!type->is_struct()) {
 
         if (type->bit_width() == 0 || type->bit_width() > 32) {

@@ -1,0 +1,15 @@
+55
+
+word_16 retarget(word_16** p, word_16* other) {
+    *p = other;
+    return 41;
+}
+
+word_16 main() {
+    word_16 first = 3;
+    word_16 other = 7;
+    word_16* p = &first;
+
+    *p = retarget(&p, &other);
+    return first + other + *p;
+}

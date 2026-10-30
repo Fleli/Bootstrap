@@ -79,7 +79,7 @@ Examples:
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
   word_8 caller() { return identity(zero()) + identity(1); }
 
-Pointer syntax examples (parsed, resolved and lowered; SimpleCPU support is still pending):
+Pointer syntax examples:
   struct Link {
       Link* next;
       word_16** data;
@@ -133,7 +133,7 @@ Each "+" wraps the accumulated expression as its left child and the next unary e
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition and unary operation to show its tree structure.
-Pointer parsing, resolution and lowering are implemented; SimpleCPU execution will follow.
+Pointer expressions are parsed, resolved, lowered and executed by SimpleCPU.
 The parser accepts syntactic expressions such as &5 or *7, which the resolver rejects.
 Addition is resolved and lowered recursively, then executed by SimpleCPU.
 Whether a name refers to a valid type or variable is checked after parsing.
@@ -228,7 +228,8 @@ Pointer types store their pointee type: word_16** points to word_16*, which poin
 word_16. TypeTable owns and reuses pointer types, so repeated occurrences of the same
 pointer type have the same Type identity. Unknown base types are rejected.
 The type table moves into IRProgram together with its struct and pointer types.
-Pointer storage width is left to the target backend.
+Pointer storage width is left to the target backend. SimpleCPU stores a pointer
+as one 32-bit RAM word containing an absolute word address.
 
 Address-of resolves its operand, requires an lvalue, and produces a pointer to the
 operand's type. The resulting pointer value is not itself an lvalue.
@@ -251,6 +252,11 @@ Assignment targets are evaluated before their RHS, including this address captur
 Reads and writes through aliases use the existing Copy, Store and Return instructions.
 Member aliases compose with dereference aliases, including nested pointers and structs.
 The lower dump prints AddressOf destination, source and Dereference destination, source.
+The SimpleCPU backend describes each slot by its type, offset and optional pointer
+source slot. A direct slot uses FP + offset; an indirect slot uses the pointer
+value stored in its source slot + offset. Member aliases retain that source and
+add the member's offset. Loads, stores, copies, arguments and returns all use this
+same address calculation, with no extra CPU opcodes.
 
 Recursive containment checks follow only inline struct members, not pointer pointees.
 Thus struct Node { Node* next; } is valid, while struct Node { Node next; } is not.

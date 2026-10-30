@@ -1,26 +1,9 @@
 #include "BuildAssembly.hpp"
+#include "BuildInstruction.hpp"
 
 #include <stdexcept>
 
 namespace simplecpu {
-namespace {
-
-struct Slot {
-
-    std::uint32_t offset;
-    const sluggish::Type* type;
-
-};
-
-// r3 holds addresses; r4 and r5 hold values while addresses are calculated.
-void load_frame_address(std::uint32_t offset, std::vector<Instruction>& instructions) {
-
-    instructions.push_back({Opcode::LoadImm, 3, offset});
-    instructions.push_back({Opcode::Add, 3, 1, 3});
-
-}
-
-} // namespace
 
 AssemblyFunction build_function(const sluggish::IRFunction& function,
     const std::unordered_map<std::string, std::uint32_t>& function_indices) {
@@ -39,9 +22,9 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
     std::uint32_t argument_words = 0;
     std::unordered_map<std::size_t, Slot> slots;
 
-    const auto add_slot = [&](std::size_t slot, const sluggish::Type* type, std::uint32_t offset) {
+    const auto add_slot = [&](std::size_t slot, Slot storage) {
 
-        if (!slots.emplace(slot, Slot{offset, type}).second) {
+        if (!slots.emplace(slot, storage).second) {
             throw std::runtime_error("Duplicate storage slot in " + function.name + ": " + std::to_string(slot));
         }
 
@@ -51,7 +34,7 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
     for (std::size_t i = function.arguments.size(); i > 0; --i) {
 
         const auto& argument = function.arguments[i - 1];
-        add_slot(argument.slot, argument.type, argument_words + 2);
+        add_slot(argument.slot, {argument_words + 2, argument.type, {}});
         argument_words += storage_words(argument.type);
 
         if (argument_words + 3 > ram_words) {
@@ -70,7 +53,7 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
             }
 
             // Unsigned subtraction encodes a negative offset for the 32-bit add.
-            add_slot(allocate->slot, allocate->type, 0u - local_words);
+            add_slot(allocate->slot, {0u - local_words, allocate->type, {}});
 
         }
     }
@@ -93,74 +76,32 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
 
         if (const auto* member = dynamic_cast<const sluggish::MemberInstruction*>(instruction.get())) {
 
-            const auto source = slots.at(member->source_slot);
-            const auto& field = source.type->members.at(member->member_index);
-            auto offset = source.offset;
+            add_slot(member->destination_slot, build_member_slot(*member, slots));
 
-            for (std::size_t i = 0; i < member->member_index; ++i) {
-                offset += storage_words(source.type->members[i].type);
-            }
+        } else if (const auto* dereference = dynamic_cast<const sluggish::DereferenceInstruction*>(instruction.get())) {
 
-            add_slot(member->destination_slot, field.type, offset);
+            const auto* type = slots.at(dereference->source_slot).type->pointee();
+            add_slot(dereference->destination_slot, {0, type, dereference->source_slot});
+
+        } else if (const auto* address = dynamic_cast<const sluggish::AddressOfInstruction*>(instruction.get())) {
+
+            build_address_of(*address, slots, instructions);
 
         } else if (const auto* store = dynamic_cast<const sluggish::StoreInstruction*>(instruction.get())) {
 
-            load_frame_address(slots.at(store->slot).offset, instructions);
-            instructions.push_back({Opcode::LoadImm, 4, store->value});
-            instructions.push_back({Opcode::Store, 3, 4});
+            build_store(*store, slots, instructions);
 
         } else if (const auto* copy = dynamic_cast<const sluggish::CopyInstruction*>(instruction.get())) {
 
-            const auto source = slots.at(copy->source_slot);
-            const auto destination = slots.at(copy->destination_slot);
-            const auto words = storage_words(source.type);
-
-            for (std::uint32_t i = 0; i < words; ++i) {
-
-                load_frame_address(source.offset + i, instructions);
-                instructions.push_back({Opcode::Load, 4, 3});
-                load_frame_address(destination.offset + i, instructions);
-                instructions.push_back({Opcode::Store, 3, 4});
-
-            }
+            build_copy(*copy, slots, instructions);
 
         } else if (const auto* add = dynamic_cast<const sluggish::AddInstruction*>(instruction.get())) {
 
-            load_frame_address(slots.at(add->left_slot).offset, instructions);
-            instructions.push_back({Opcode::Load, 4, 3});
-            load_frame_address(slots.at(add->right_slot).offset, instructions);
-            instructions.push_back({Opcode::Load, 5, 3});
-            instructions.push_back({Opcode::Add, 4, 4, 5});
-            load_frame_address(slots.at(add->destination_slot).offset, instructions);
-            instructions.push_back({Opcode::Store, 3, 4});
+            build_add(*add, slots, instructions);
 
         } else if (const auto* call = dynamic_cast<const sluggish::CallInstruction*>(instruction.get())) {
 
-            load_frame_address(slots.at(call->destination_slot).offset, instructions);
-            instructions.push_back({Opcode::Push, 3});
-
-            std::uint32_t pushed_words = 0;
-
-            for (const auto slot : call->argument_slots) {
-
-                const auto argument = slots.at(slot);
-                const auto words = storage_words(argument.type);
-                pushed_words += words;
-
-                // Reverse each value's words so its first word has the lowest address.
-                for (std::uint32_t i = words; i > 0; --i) {
-
-                    load_frame_address(argument.offset + i - 1, instructions);
-                    instructions.push_back({Opcode::Load, 4, 3});
-                    instructions.push_back({Opcode::Push, 4});
-
-                }
-
-            }
-
-            instructions.push_back({Opcode::Call, function_indices.at(call->function_name)});
-            instructions.push_back({Opcode::LoadImm, 3, pushed_words + 1});
-            instructions.push_back({Opcode::Add, 2, 2, 3});
+            build_call(*call, slots, function_indices, instructions);
 
         } else if (const auto* returned = dynamic_cast<const sluggish::ReturnInstruction*>(instruction.get())) {
 
@@ -168,38 +109,7 @@ AssemblyFunction build_function(const sluggish::IRFunction& function,
                 throw std::runtime_error("Return must be the final instruction in " + function.name);
             }
 
-            const auto words = storage_words(function.return_type);
-            load_frame_address(argument_words + 2, instructions);
-            instructions.push_back({Opcode::Load, 5, 3});
-
-            for (std::uint32_t i = 0; i < words; ++i) {
-
-                if (returned->source_slot.has_value()) {
-
-                    load_frame_address(slots.at(*returned->source_slot).offset + i, instructions);
-                    instructions.push_back({Opcode::Load, 4, 3});
-
-                } else {
-
-                    instructions.push_back({Opcode::LoadImm, 4, returned->value});
-
-                }
-
-                instructions.push_back({Opcode::Store, 5, 4});
-
-                if (i + 1 < words) {
-
-                    instructions.push_back({Opcode::LoadImm, 3, 1});
-                    instructions.push_back({Opcode::Add, 5, 5, 3});
-
-                }
-
-            }
-
-            instructions.push_back({Opcode::LoadImm, 3, 0});
-            instructions.push_back({Opcode::Add, 2, 1, 3});
-            instructions.push_back({Opcode::Pop, 1});
-            instructions.push_back({Opcode::Ret});
+            build_return(*returned, function.return_type, argument_words, slots, instructions);
 
         } else {
 

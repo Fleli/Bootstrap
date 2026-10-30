@@ -1,0 +1,11 @@
+12
+
+word_16 mutate(word_16* p) {
+    *p = 29;
+    return 7;
+}
+
+word_16 main() {
+    word_16 value = 5;
+    return value + mutate(&value);
+}

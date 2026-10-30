@@ -43,11 +43,21 @@ CPU_SOURCES = simplecpu/main.cpp \
 	simplecpu/sluggish-backend/build-assembly/BuildAssembly.cpp \
 	simplecpu/sluggish-backend/build-assembly/StorageWords.cpp \
 	simplecpu/sluggish-backend/build-assembly/BuildFunction.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildMember.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildAddressOf.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildStore.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildCopy.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildAdd.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildCall.cpp \
+	simplecpu/sluggish-backend/build-assembly/BuildReturn.cpp \
+	simplecpu/sluggish-backend/build-assembly/Slot.cpp \
 	simplecpu/assembler/Assembler.cpp \
 	simplecpu/emulator/Emulator.cpp
 
 CPU_HEADERS = simplecpu/isa/Instruction.hpp \
 	simplecpu/sluggish-backend/build-assembly/BuildAssembly.hpp \
+	simplecpu/sluggish-backend/build-assembly/BuildInstruction.hpp \
+	simplecpu/sluggish-backend/build-assembly/Slot.hpp \
 	simplecpu/assembler/Assembler.hpp \
 	simplecpu/emulator/Emulator.hpp
 

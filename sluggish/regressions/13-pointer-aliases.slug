@@ -1,0 +1,12 @@
+34
+
+word_16 main() {
+    word_16 value = 3;
+    word_16* p = &value;
+    word_16** pp = &p;
+    **pp = 11;
+
+    word_16* q = &*p;
+    *q = *q + 6;
+    return value + **pp;
+}

@@ -1,0 +1,16 @@
+41
+
+word_16 mutate(word_16* p) {
+    *p = 29;
+    return 7;
+}
+
+word_16 combine(word_16 first, word_16 second) {
+    return first + second;
+}
+
+word_16 main() {
+    word_16 value = 5;
+    word_16 result = combine(value, mutate(&value));
+    return result + value;
+}

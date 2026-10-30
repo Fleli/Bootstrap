@@ -1,0 +1,25 @@
+6 26
+
+struct Pair {
+    word_16 x;
+    word_16 y;
+}
+
+Pair copy(Pair* target, Pair* source) {
+    *target = *source;
+    return *target;
+}
+
+Pair main() {
+    Pair source;
+    source.x = 3;
+    source.y = 7;
+    Pair target;
+    Pair result = copy(&target, &source);
+
+    source.x = 17;
+    target.y = 19;
+    result.x = result.x + target.x;
+    result.y = result.y + target.y;
+    return result;
+}

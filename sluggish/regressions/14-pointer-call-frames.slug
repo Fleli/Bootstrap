@@ -1,0 +1,16 @@
+19
+
+word_16* advance(word_16* p) {
+    *p = *p + 7;
+    return p;
+}
+
+word_16* forward(word_16* p) {
+    return advance(p);
+}
+
+word_16 main() {
+    word_16 value = 3;
+    *forward(&value) = value + 9;
+    return value;
+}

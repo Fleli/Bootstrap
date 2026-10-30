@@ -1,0 +1,25 @@
+63
+
+struct Holder {
+    word_16* pointer;
+    word_16 tag;
+}
+
+word_16 change(Holder holder, word_16* other) {
+    *holder.pointer = 11;
+    holder.pointer = other;
+    holder.tag = 17;
+    *holder.pointer = 19;
+    return holder.tag;
+}
+
+word_16 main() {
+    word_16 value = 3;
+    word_16 other = 7;
+    Holder holder;
+    holder.pointer = &value;
+    holder.tag = 5;
+
+    word_16 result = change(holder, &other);
+    return value + other + *holder.pointer + holder.tag + result;
+}

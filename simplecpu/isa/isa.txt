@@ -74,7 +74,8 @@ Calling convention:
   left-to-right before pushing anything for the call. It then pushes the result
   storage address, pushes argument values in source order, and executes call.
   The result storage address is a hidden argument, separate from source parameters.
-  Each scalar occupies one RAM word, including word_8 and word_16 values. Struct
+  Each scalar occupies one RAM word, including word_8, word_16 and pointer values.
+  A pointer contains an absolute 32-bit RAM word address. Struct
   members occupy consecutive words in declaration order, recursively. Empty structs
   occupy one word. There is no packing of several scalar fields into one word.
   Each argument's words are pushed in reverse order, so its first word ends up at
@@ -93,10 +94,15 @@ Calling convention:
 
   With no arguments, the result storage address is at FP + 2.
   Locals and temporaries reserve as many consecutive words as their types require.
-  IR slots map to offsets within each invocation's frame, so recursive calls have
-  separate storage. A Member IR instruction creates a slot at the member's offset
-  inside existing storage; it needs no CPU instruction. Copy expands to a load
-  and store for each word of the value.
+  Allocated IR slots map to offsets within each invocation's frame, so recursive
+  calls have separate storage. A Dereference IR instruction creates an indirect
+  slot referring to the address held in a captured pointer-value slot. It does
+  not allocate pointee storage or emit a CPU instruction by itself.
+  A Member IR instruction creates an alias at the member's offset inside existing
+  direct or indirect storage; it also needs no CPU instruction by itself.
+  AddressOf calculates a slot's address and stores it as a pointer value.
+  Copy expands to a load and store for each word of the value.
+  Slot address calculations use r3 and r6, preserving values in r4 and r5.
 
   To return, the callee writes the result through the hidden result storage pointer,
   sets SP = FP, executes pop r1 to restore the caller's FP, then executes ret.
