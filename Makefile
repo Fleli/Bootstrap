@@ -10,6 +10,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/parse/ParseFunction.cpp \
 	sluggish/compiler/parse/ParseType.cpp \
 	sluggish/compiler/parse/ParseExpression.cpp \
+	sluggish/compiler/parse/ParseCallArguments.cpp \
 	sluggish/compiler/parse/ParseStatement.cpp \
 	sluggish/compiler/parse/ParseStruct.cpp \
 	sluggish/compiler/parse/Format.cpp \

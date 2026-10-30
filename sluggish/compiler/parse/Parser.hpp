@@ -43,6 +43,14 @@ struct CallExpression : public Expression {
 
 };
 
+struct MethodCallExpression : public Expression {
+
+    std::string name;
+    std::unique_ptr<Expression> object;
+    std::vector<std::unique_ptr<Expression>> arguments;
+
+};
+
 struct AdditionExpression : public Expression {
 
     std::unique_ptr<Expression> left;
@@ -117,6 +125,7 @@ const Token& consume(const std::vector<Token>& tokens, std::size_t& i, TokenType
 std::string parse_type(const std::vector<Token>& tokens, std::size_t& i);
 
 std::unique_ptr<Expression> parse_expression(const std::vector<Token>& tokens, std::size_t& i);
+std::vector<std::unique_ptr<Expression>> parse_call_arguments(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<Statement> parse_statement(const std::vector<Token>& tokens, std::size_t& i);
 std::unique_ptr<StructDefinition> parse_struct(const std::vector<Token>& tokens, std::size_t& i);
 

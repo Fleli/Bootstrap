@@ -24,8 +24,8 @@ initializer    -> "=" expression | empty
 expression     -> unary addition_tail
 addition_tail  -> "+" unary addition_tail | empty
 unary          -> "&" unary | "*" unary | postfix
-postfix        -> primary member_tail
-member_tail    -> "." Symbol member_tail | empty
+postfix        -> primary postfix_tail
+postfix_tail   -> "." Symbol call_tail postfix_tail | empty
 primary        -> Number | Symbol call_tail | "(" expression ")"
 call_tail      -> "(" call_arguments ")" | empty
 call_arguments -> expression call_arguments_tail | empty
@@ -95,7 +95,7 @@ Pointer syntax examples:
       return *q;
   }
 
-Method definition syntax (parsing only; method calls and resolution are still pending):
+Method syntax (definitions and calls are parsed; resolution is still pending):
   struct Counter {
       word_16 value;
       word_16 get() return self.value;
@@ -103,6 +103,10 @@ Method definition syntax (parsing only; method calls and resolution are still pe
           self.value = next;
           return self.value;
       }
+  }
+  word_16 methods(Counter counter, Counter* pointer) {
+      word_16 value = counter.set(5);
+      return counter.get() + (*pointer).get();
   }
 
 Only function and struct definitions are allowed at top level. Structs may contain
@@ -134,15 +138,25 @@ An initializer is absent when the next token is ";".
 "return" starts a return statement and requires an expression followed by ";".
 Only the exact names "return" and "struct" are keywords; names such as "returnValue"
 and "structure" remain Symbols.
-Expressions contain numbers, variable names, member access, function calls, unary
+Expressions contain numbers, variable names, member access, function and method calls, unary
 address-of and dereference operations, and additions, with parentheses for grouping.
 Within an expression, a name followed by "(" starts a call; otherwise it is a variable reference.
 Call arguments are comma-separated expressions. The list may be empty but cannot have a trailing comma.
 Calls can appear in initializers, assignment RHSs, returns and other expressions, including call arguments.
-Only named functions can be called. Standalone calls such as foo(); are not supported.
-Member access is a postfix operation and binds tighter than unary operators and addition:
+Calls target named functions or methods selected with a dot. Calling arbitrary
+expression values, such as (function)() or function()(), is not supported.
+Standalone calls such as foo(); and object.method(); are not supported.
+Member access and method calls are postfix operations and bind tighter than unary operators and addition:
 a.x + b.y groups as (a.x) + (b.y). Chained access a.b.c groups as (a.b).c.
 Members can also be read after a call or grouped expression, such as make_point().x.
+After a dot and name, "(" starts a method call; otherwise the name selects a field.
+Both function and method calls use the same argument-list parser.
+A MethodCallExpression stores its object expression, method name and explicit arguments.
+Postfix operations chain left-to-right: line.start.sum(), (*pointer).sum(),
+make_point().sum(), and object.method().field.other_method() all parse recursively.
+The parser does not check receiver types, lvalues, method existence or argument types;
+those checks and the implicit receiver argument belong to later resolver work.
+The parse dump includes the receiver before each method name.
 Unary "&" and "*" recursively parse another unary expression, allowing **pp, &*p,
 and *get_pointer(). They bind tighter than addition: *p + x groups as (*p) + x.
 Member access binds tighter: *p.x groups as *(p.x), while (*p).x selects a member

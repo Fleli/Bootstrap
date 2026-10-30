@@ -7,6 +7,26 @@ namespace sluggish {
 
 namespace {
 
+std::string format_expression(const Expression* expression);
+
+std::string format_call(const std::string& name, const std::vector<std::unique_ptr<Expression>>& arguments) {
+
+    std::string output = name + "(";
+
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+
+        if (i != 0) {
+            output += ", ";
+        }
+
+        output += format_expression(arguments[i].get());
+
+    }
+
+    return output + ")";
+
+}
+
 std::string format_expression(const Expression* expression) {
 
     if (const auto* number = dynamic_cast<const NumberExpression*>(expression)) {
@@ -22,21 +42,11 @@ std::string format_expression(const Expression* expression) {
     }
 
     if (const auto* call = dynamic_cast<const CallExpression*>(expression)) {
+        return format_call(call->name, call->arguments);
+    }
 
-        std::string output = call->name + "(";
-
-        for (std::size_t i = 0; i < call->arguments.size(); ++i) {
-
-            if (i != 0) {
-                output += ", ";
-            }
-
-            output += format_expression(call->arguments[i].get());
-
-        }
-
-        return output + ")";
-
+    if (const auto* call = dynamic_cast<const MethodCallExpression*>(expression)) {
+        return format_call(format_expression(call->object.get()) + "." + call->name, call->arguments);
     }
 
     if (const auto* address = dynamic_cast<const AddressOfExpression*>(expression)) {

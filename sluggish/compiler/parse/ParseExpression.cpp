@@ -24,27 +24,9 @@ std::unique_ptr<Expression> parse_primary(const std::vector<Token>& tokens, std:
 
         if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
 
-            ++i;
             auto expression = std::make_unique<CallExpression>();
             expression->name = name;
-
-            if (i < tokens.size() && tokens[i].type != TokenType::RightParen) {
-
-                while (true) {
-
-                    expression->arguments.push_back(parse_expression(tokens, i));
-
-                    if (i == tokens.size() || tokens[i].type != TokenType::Comma) {
-                        break;
-                    }
-
-                    ++i;
-
-                }
-
-            }
-
-            consume(tokens, i, TokenType::RightParen, "')' after call arguments");
+            expression->arguments = parse_call_arguments(tokens, i);
             return expression;
 
         }
@@ -75,10 +57,24 @@ std::unique_ptr<Expression> parse_postfix(const std::vector<Token>& tokens, std:
     while (i < tokens.size() && tokens[i].type == TokenType::Dot) {
 
         ++i;
-        auto member = std::make_unique<MemberExpression>();
-        member->name = consume(tokens, i, TokenType::Symbol, "a member name after '.'").body;
-        member->object = std::move(expression);
-        expression = std::move(member);
+        auto name = consume(tokens, i, TokenType::Symbol, "a member name after '.'").body;
+
+        if (i < tokens.size() && tokens[i].type == TokenType::LeftParen) {
+
+            auto call = std::make_unique<MethodCallExpression>();
+            call->name = std::move(name);
+            call->object = std::move(expression);
+            call->arguments = parse_call_arguments(tokens, i);
+            expression = std::move(call);
+
+        } else {
+
+            auto member = std::make_unique<MemberExpression>();
+            member->name = std::move(name);
+            member->object = std::move(expression);
+            expression = std::move(member);
+
+        }
 
     }
 
