@@ -21,6 +21,9 @@ struct ResolvedDeclaration : public ResolvedStatement {
     std::string name;
     const Type* type = nullptr;
 
+    // Source-level self refers to the pointee of this hidden argument.
+    bool is_self = false;
+
 };
 
 struct ResolvedExpression {

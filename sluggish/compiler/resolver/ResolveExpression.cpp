@@ -21,22 +21,7 @@ std::unique_ptr<ResolvedExpression> Resolver::resolve_expression(const Expressio
     }
 
     if (const auto* variable = dynamic_cast<const VariableExpression*>(expression)) {
-
-        const auto* declaration = scope.find(variable->name);
-
-        if (declaration == nullptr) {
-            throw std::runtime_error("Undeclared variable: " + variable->name);
-        }
-
-        if (expected_type != nullptr && declaration->type != expected_type) {
-            throw std::runtime_error("Expected " + expected_type->name() + ", got " + declaration->type->name());
-        }
-
-        auto resolved = std::make_unique<ResolvedVariableExpression>();
-        resolved->type = declaration->type;
-        resolved->declaration = declaration;
-        return resolved;
-
+        return resolve_variable_expression(*variable, scope, expected_type);
     }
 
     if (const auto* member = dynamic_cast<const MemberExpression*>(expression)) {

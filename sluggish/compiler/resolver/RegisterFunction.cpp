@@ -42,6 +42,7 @@ void Resolver::register_function_signature(const Statement* statement, const Typ
         auto self = std::make_unique<ResolvedDeclaration>();
         self->name = "self";
         self->type = types.pointer_to(owner);
+        self->is_self = true;
         function_scope.symbols.emplace(self->name, self.get());
         resolved->arguments.push_back(std::move(self));
 

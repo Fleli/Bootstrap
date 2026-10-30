@@ -32,10 +32,12 @@ private:
 
     void register_method_signatures(const StructDefinition& definition);
     void register_function_signature(const Statement* statement, const Type* owner = nullptr);
-    void resolve_function_body(const Statement* statement);
+    void resolve_method_bodies(const StructDefinition& definition);
+    void resolve_function_body(const Statement* statement, const Type* owner = nullptr);
 
     void resolve(const Statement* statement, Scope& current_scope, ResolvedFunction& function);
     std::unique_ptr<ResolvedExpression> resolve_expression(const Expression* expression, const Scope& scope, const Type* expected_type = nullptr);
+    std::unique_ptr<ResolvedExpression> resolve_variable_expression(const VariableExpression& variable, const Scope& scope, const Type* expected_type);
     std::unique_ptr<ResolvedExpression> resolve_member_expression(const MemberExpression& member, const Scope& scope, const Type* expected_type);
     std::unique_ptr<ResolvedExpression> resolve_address_of_expression(const AddressOfExpression& address, const Scope& scope, const Type* expected_type);
     std::unique_ptr<ResolvedExpression> resolve_dereference_expression(const DereferenceExpression& dereference, const Scope& scope, const Type* expected_type);

@@ -95,7 +95,7 @@ Pointer syntax examples:
       return *q;
   }
 
-Method syntax (definitions and calls are parsed; only method signatures are resolved):
+Method syntax (definitions and bodies are resolved; method-call resolution is still pending):
   struct Counter {
       word_16 value;
       word_16 get() return self.value;
@@ -119,7 +119,7 @@ After Type name, "(" starts a method and ";" ends a field declaration.
 Fields and methods may be interleaved. The AST stores fields and methods separately,
 preserving declaration order within each list. Methods reuse the Function AST type.
 The parse dump shows fields first, followed by indented functions and their bodies.
-self is still an ordinary Symbol; its meaning inside method bodies is not resolved yet.
+self is still an ordinary Symbol; inside methods it refers through the hidden receiver.
 Types are a name followed by zero or more "*" tokens. The same type parser is used
 for variables, struct members, function parameters and return types. Whitespace
 around "*" is ignored; the AST records a normalized name such as "word_16**".
@@ -211,9 +211,18 @@ including structs defined later. Duplicate method names within one struct and
 duplicate parameter names are rejected; an explicit self parameter conflicts with
 the hidden receiver. Different structs and global functions may reuse a method name.
 Methods are separate from stored fields and do not affect a struct's storage layout.
-Only global function bodies are resolved at this stage. Method bodies, the source
-meaning of self, and method-call resolution remain pending. Registered methods have
-no resolved body statements yet, so programs containing them cannot run on SimpleCPU.
+Global functions and methods share body resolution, including argument scopes,
+nested lexical scopes, assignments, return type checks and the required return.
+The hidden receiver declaration is marked separately from ordinary arguments.
+When a variable reference binds to it, resolution wraps the pointer reference in a
+dereference. Thus source-level self has the owning struct type and is an lvalue:
+self.field reads or writes the original object's field, &self produces an owner
+pointer, and self = value copies a whole struct into the receiver's storage.
+Normal lexical shadowing still applies. Ordinary variables or parameters named
+self are not implicitly dereferenced; only the hidden receiver binding is.
+Method bodies can call global functions. Method-call expressions such as
+object.method() and self.other_method() still await resolution in the next stage.
+Resolved method bodies reuse the existing function and pointer IR/backend support.
 Each function lowers to its own IR function with typed argument slots and one block.
 SimpleCPU starts in generated _start code, which calls a zero-argument main and halts.
 main writes its result starting at RAM word 0. Code starts after the full result,
