@@ -79,7 +79,7 @@ Examples:
   word_8 grouped(word_8 a, word_8 b, word_8 c) { return a + (b + c); }
   word_8 caller() { return identity(zero()) + identity(1); }
 
-Pointer syntax examples (parsed and resolved; lowering is not implemented yet):
+Pointer syntax examples (parsed, resolved and lowered; SimpleCPU support is still pending):
   struct Link {
       Link* next;
       word_16** data;
@@ -133,7 +133,7 @@ Each "+" wraps the accumulated expression as its left child and the next unary e
 Parenthesized expressions are parsed recursively. Unary "+" and other operators are not supported.
 Initializers, assignments and returns share the same expression parser and AST types.
 The parse dump parenthesizes each addition and unary operation to show its tree structure.
-Pointer parsing and resolution are implemented; lowering and execution will follow.
+Pointer parsing, resolution and lowering are implemented; SimpleCPU execution will follow.
 The parser accepts syntactic expressions such as &5 or *7, which the resolver rejects.
 Addition is resolved and lowered recursively, then executed by SimpleCPU.
 Whether a name refers to a valid type or variable is checked after parsing.
@@ -148,7 +148,9 @@ Only word types support addition for now; struct and pointer addition are reject
 Literals use the expected type from the assignment, return or call argument context.
 Addition results are not evaluated or checked for overflow during resolution.
 Lowering emits an Add instruction with left, right and destination slots for each addition.
-Literal operands are stored in temporary slots; variable operands use their existing slots.
+Literal operands are stored in temporary slots; lvalue operands are copied into temporaries.
+Operands are evaluated left-to-right, capturing each value before evaluating the next.
+This preserves the left operand if the right operand calls a function that changes it.
 Each addition result gets a temporary slot. Arguments, locals and temporaries share one
 slot counter per function. The lower dump prints Add destination, left, right.
 The CPU backend loads both operands, adds their 32-bit register values and stores the result.
@@ -186,6 +188,8 @@ Arguments are resolved in the caller's scope using each parameter's expected typ
 The call's return type must match its surrounding expected type; no implicit conversions are allowed.
 A local variable or argument shadows a function of the same name and cannot be called.
 Call arguments are lowered left-to-right into slots in the caller's function.
+Lvalue arguments are copied into temporary slots before evaluating the next argument,
+so later arguments cannot change the values already captured for the call.
 A Call instruction stores the function name, ordered argument slots and a destination slot.
 Each call gets a temporary result slot with the function's return type.
 The lower dump prints Call destination, function(argument slots).
@@ -235,6 +239,18 @@ Assignments, arguments and returns require exact pointer types, including pointe
 depth and the identity of a pointed-to struct. Numeric literals cannot initialize
 pointers, including 0; there are no implicit pointer conversions or pointer arithmetic.
 Pointer initialization and lifetime checks are not implemented.
+
+Address-of lowers to an AddressOf instruction with source and destination slots.
+It stores the address of source storage in a newly allocated pointer slot.
+Dereference lowers to a Dereference instruction with source and destination slots.
+The destination aliases storage at the source pointer's address; it does not allocate
+storage for the pointee. Its type is the source pointer type's pointee type.
+The pointer value is captured in a temporary before creating this alias, so changing
+the original pointer later does not change the alias's address.
+Assignment targets are evaluated before their RHS, including this address capture.
+Reads and writes through aliases use the existing Copy, Store and Return instructions.
+Member aliases compose with dereference aliases, including nested pointers and structs.
+The lower dump prints AddressOf destination, source and Dereference destination, source.
 
 Recursive containment checks follow only inline struct members, not pointer pointees.
 Thus struct Node { Node* next; } is valid, while struct Node { Node next; } is not.

@@ -21,6 +21,7 @@ COMPILER_SOURCES = sluggish/compiler/Compiler.cpp \
 	sluggish/compiler/lower/BasicBlock.cpp \
 	sluggish/compiler/lower/AllocateSlot.cpp \
 	sluggish/compiler/lower/LowerExpression.cpp \
+	sluggish/compiler/lower/LowerValue.cpp \
 	sluggish/compiler/lower/LowerFunction.cpp \
 	sluggish/compiler/stage-emit/Emit.cpp
 

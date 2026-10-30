@@ -47,6 +47,23 @@ struct MemberInstruction : public BasicBlockInstruction {
 
 };
 
+// Writes the address of source storage into the destination pointer value.
+struct AddressOfInstruction : public BasicBlockInstruction {
+
+    std::size_t source_slot;
+    std::size_t destination_slot;
+
+};
+
+// The destination aliases pointed-to storage; it does not allocate a pointee.
+// The source holds a pointer value captured in a temporary, so the address stays fixed.
+struct DereferenceInstruction : public BasicBlockInstruction {
+
+    std::size_t source_slot;
+    std::size_t destination_slot;
+
+};
+
 struct AddInstruction : public BasicBlockInstruction {
 
     std::size_t left_slot;

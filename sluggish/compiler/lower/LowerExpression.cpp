@@ -14,6 +14,32 @@ std::size_t lower_expression(const ResolvedExpression* expression,
         return slots.at(variable->declaration);
     }
 
+    if (const auto* address = dynamic_cast<const ResolvedAddressOfExpression*>(expression)) {
+
+        const auto source_slot = lower_expression(address->operand.get(), slots, block, next_slot);
+        const auto destination_slot = allocate_slot(address->type, block, next_slot);
+
+        auto instruction = std::make_unique<AddressOfInstruction>();
+        instruction->source_slot = source_slot;
+        instruction->destination_slot = destination_slot;
+        block.instructions.push_back(std::move(instruction));
+        return destination_slot;
+
+    }
+
+    if (const auto* dereference = dynamic_cast<const ResolvedDereferenceExpression*>(expression)) {
+
+        const auto source_slot = lower_value(dereference->operand.get(), slots, block, next_slot);
+        const auto destination_slot = next_slot++;
+
+        auto instruction = std::make_unique<DereferenceInstruction>();
+        instruction->source_slot = source_slot;
+        instruction->destination_slot = destination_slot;
+        block.instructions.push_back(std::move(instruction));
+        return destination_slot;
+
+    }
+
     if (const auto* member = dynamic_cast<const ResolvedMemberExpression*>(expression)) {
 
         const auto source_slot = lower_expression(member->object.get(), slots, block, next_slot);
@@ -45,7 +71,7 @@ std::size_t lower_expression(const ResolvedExpression* expression,
         instruction->function_name = call->function->name;
 
         for (const auto& argument : call->arguments) {
-            instruction->argument_slots.push_back(lower_expression(argument.get(), slots, block, next_slot));
+            instruction->argument_slots.push_back(lower_value(argument.get(), slots, block, next_slot));
         }
 
         const auto destination_slot = allocate_slot(call->type, block, next_slot);
@@ -57,8 +83,8 @@ std::size_t lower_expression(const ResolvedExpression* expression,
 
     if (const auto* addition = dynamic_cast<const ResolvedAdditionExpression*>(expression)) {
 
-        const auto left_slot = lower_expression(addition->left.get(), slots, block, next_slot);
-        const auto right_slot = lower_expression(addition->right.get(), slots, block, next_slot);
+        const auto left_slot = lower_value(addition->left.get(), slots, block, next_slot);
+        const auto right_slot = lower_value(addition->right.get(), slots, block, next_slot);
         const auto destination_slot = allocate_slot(addition->type, block, next_slot);
 
         auto instruction = std::make_unique<AddInstruction>();

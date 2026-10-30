@@ -19,4 +19,9 @@ std::size_t lower_expression(const ResolvedExpression* expression,
     const std::unordered_map<const ResolvedDeclaration*, std::size_t>& slots,
     BasicBlock& block, std::size_t& next_slot);
 
+// Captures an lvalue's current contents before later expressions can change them.
+std::size_t lower_value(const ResolvedExpression* expression,
+    const std::unordered_map<const ResolvedDeclaration*, std::size_t>& slots,
+    BasicBlock& block, std::size_t& next_slot);
+
 } // namespace sluggish
